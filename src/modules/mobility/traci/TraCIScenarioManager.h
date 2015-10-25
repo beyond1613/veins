@@ -58,162 +58,170 @@ namespace Veins {
 
 class TraCICommandInterface;
 
-class TraCIScenarioManager : public cSimpleModule
-{
-	public:
+class TraCIScenarioManager: public cSimpleModule {
+public:
 
-		enum VehicleSignal {
-			VEH_SIGNAL_UNDEF = -1,
-			VEH_SIGNAL_NONE = 0,
-			VEH_SIGNAL_BLINKER_RIGHT = 1,
-			VEH_SIGNAL_BLINKER_LEFT = 2,
-			VEH_SIGNAL_BLINKER_EMERGENCY = 4,
-			VEH_SIGNAL_BRAKELIGHT = 8,
-			VEH_SIGNAL_FRONTLIGHT = 16,
-			VEH_SIGNAL_FOGLIGHT = 32,
-			VEH_SIGNAL_HIGHBEAM = 64,
-			VEH_SIGNAL_BACKDRIVE = 128,
-			VEH_SIGNAL_WIPER = 256,
-			VEH_SIGNAL_DOOR_OPEN_LEFT = 512,
-			VEH_SIGNAL_DOOR_OPEN_RIGHT = 1024,
-			VEH_SIGNAL_EMERGENCY_BLUE = 2048,
-			VEH_SIGNAL_EMERGENCY_RED = 4096,
-			VEH_SIGNAL_EMERGENCY_YELLOW = 8192
-		};
+    enum VehicleSignal {
+        VEH_SIGNAL_UNDEF = -1,
+        VEH_SIGNAL_NONE = 0,
+        VEH_SIGNAL_BLINKER_RIGHT = 1,
+        VEH_SIGNAL_BLINKER_LEFT = 2,
+        VEH_SIGNAL_BLINKER_EMERGENCY = 4,
+        VEH_SIGNAL_BRAKELIGHT = 8,
+        VEH_SIGNAL_FRONTLIGHT = 16,
+        VEH_SIGNAL_FOGLIGHT = 32,
+        VEH_SIGNAL_HIGHBEAM = 64,
+        VEH_SIGNAL_BACKDRIVE = 128,
+        VEH_SIGNAL_WIPER = 256,
+        VEH_SIGNAL_DOOR_OPEN_LEFT = 512,
+        VEH_SIGNAL_DOOR_OPEN_RIGHT = 1024,
+        VEH_SIGNAL_EMERGENCY_BLUE = 2048,
+        VEH_SIGNAL_EMERGENCY_RED = 4096,
+        VEH_SIGNAL_EMERGENCY_YELLOW = 8192
+    };
 
-		TraCIScenarioManager();
-		~TraCIScenarioManager();
-		virtual int numInitStages() const { return std::max(cSimpleModule::numInitStages(), 2); }
-		virtual void initialize(int stage);
-		virtual void finish();
-		virtual void handleMessage(cMessage *msg);
-		virtual void handleSelfMsg(cMessage *msg);
+    TraCIScenarioManager();
+    ~TraCIScenarioManager();
+    virtual int numInitStages() const {
+        return std::max(cSimpleModule::numInitStages(), 2);
+    }
+    virtual void initialize(int stage);
+    virtual void finish();
+    virtual void handleMessage(cMessage *msg);
+    virtual void handleSelfMsg(cMessage *msg);
 
-		bool isConnected() const { return (connection); }
+    bool isConnected() const {
+        return (connection);
+    }
 
-		TraCICommandInterface* getCommandInterface() const { return commandIfc; }
+    TraCICommandInterface* getCommandInterface() const {
+        return commandIfc;
+    }
 
-		bool getAutoShutdownTriggered() {
-			return autoShutdownTriggered;
-		}
+    bool getAutoShutdownTriggered() {
+        return autoShutdownTriggered;
+    }
 
-		const std::map<std::string, cModule*>& getManagedHosts() {
-			return hosts;
-		}
+    const std::map<std::string, cModule*>& getManagedHosts() {
+        return hosts;
+    }
 
-		/**
-		 * convert TraCI coordinates to OMNeT++ coordinates
-		 */
-		Coord traci2omnet(TraCICoord coord) const;
-		std::list<Coord> traci2omnet(const std::list<TraCICoord>&) const;
+    /**
+     * convert TraCI coordinates to OMNeT++ coordinates
+     */
+    Coord traci2omnet(TraCICoord coord) const;
+    std::list<Coord> traci2omnet(const std::list<TraCICoord>&) const;
 
-		/**
-		 * convert OMNeT++ coordinates to TraCI coordinates
-		 */
-		TraCICoord omnet2traci(Coord coord) const;
-		std::list<TraCICoord> omnet2traci(const std::list<Coord>&) const;
+    /**
+     * convert OMNeT++ coordinates to TraCI coordinates
+     */
+    TraCICoord omnet2traci(Coord coord) const;
+    std::list<TraCICoord> omnet2traci(const std::list<Coord>&) const;
 
-	protected:
-		bool debug; /**< whether to emit debug messages */
-		simtime_t connectAt; /**< when to connect to TraCI server (must be the initial timestep of the server) */
-		simtime_t firstStepAt; /**< when to start synchronizing with the TraCI server (-1: immediately after connecting) */
-		simtime_t updateInterval; /**< time interval of hosts' position updates */
-		std::string moduleType; /**< module type to be used in the simulation for each managed vehicle */
-		std::string moduleName; /**< module name to be used in the simulation for each managed vehicle */
-		std::string moduleDisplayString; /**< module displayString to be used in the simulation for each managed vehicle */
-		std::string host;
-		int port;
+protected:
+    bool debug; /**< whether to emit debug messages */
+    simtime_t connectAt; /**< when to connect to TraCI server (must be the initial timestep of the server) */
+    simtime_t firstStepAt; /**< when to start synchronizing with the TraCI server (-1: immediately after connecting) */
+    simtime_t updateInterval; /**< time interval of hosts' position updates */
+    std::string moduleType; /**< module type to be used in the simulation for each managed vehicle */
+    std::string moduleName; /**< module name to be used in the simulation for each managed vehicle */
+    std::string moduleDisplayString; /**< module displayString to be used in the simulation for each managed vehicle */
+    std::string host;
+    int port;
 
-		uint32_t vehicleNameCounter;
-		cMessage* myAddVehicleTimer;
-		std::vector<std::string> vehicleTypeIds;
-		std::map<int, std::queue<std::string> > vehicleInsertQueue;
-		std::set<std::string> queuedVehicles;
-		std::vector<std::string> routeIds;
-		int vehicleRngIndex;
-		int numVehicles;
+    uint32_t vehicleNameCounter;
+    cMessage* myAddVehicleTimer;
+    std::vector<std::string> vehicleTypeIds;
+    std::map<int, std::queue<std::string> > vehicleInsertQueue;
+    std::set<std::string> queuedVehicles;
+    std::vector<std::string> routeIds;
+    int vehicleRngIndex;
+    int numVehicles;
 
-		cRNG* mobRng;
+    cRNG* mobRng;
 
-		bool autoShutdown; /**< Shutdown module as soon as no more vehicles are in the simulation */
-		int margin;
-		double penetrationRate;
-		std::list<std::string> roiRoads; /**< which roads (e.g. "hwy1 hwy2") are considered to consitute the region of interest, if not empty */
-		std::list<std::pair<TraCICoord, TraCICoord> > roiRects; /**< which rectangles (e.g. "0,0-10,10 20,20-30,30) are considered to consitute the region of interest, if not empty */
+    bool autoShutdown; /**< Shutdown module as soon as no more vehicles are in the simulation */
+    int margin;
+    double penetrationRate;
+    std::list<std::string> roiRoads; /**< which roads (e.g. "hwy1 hwy2") are considered to consitute the region of interest, if not empty */
+    std::list<std::pair<TraCICoord, TraCICoord> > roiRects; /**< which rectangles (e.g. "0,0-10,10 20,20-30,30) are considered to consitute the region of interest, if not empty */
 
-		TraCIConnection* connection;
-		TraCICommandInterface* commandIfc;
-		TraCICoord netbounds1; /* network boundaries as reported by TraCI (x1, y1) */
-		TraCICoord netbounds2; /* network boundaries as reported by TraCI (x2, y2) */
+    TraCIConnection* connection;
+    TraCICommandInterface* commandIfc;
+    TraCICoord netbounds1; /* network boundaries as reported by TraCI (x1, y1) */
+    TraCICoord netbounds2; /* network boundaries as reported by TraCI (x2, y2) */
 
-		size_t nextNodeVectorIndex; /**< next OMNeT++ module vector index to use */
-		std::map<std::string, cModule*> hosts; /**< vector of all hosts managed by us */
-		std::set<std::string> unEquippedHosts;
-		std::set<std::string> subscribedVehicles; /**< all vehicles we have already subscribed to */
-		uint32_t activeVehicleCount; /**< number of vehicles, be it parking or driving **/
-		uint32_t parkingVehicleCount; /**< number of parking vehicles, derived from parking start/end events */
-		uint32_t drivingVehicleCount; /**< number of driving, as reported by sumo */
-		bool autoShutdownTriggered;
-		cMessage* connectAndStartTrigger; /**< self-message scheduled for when to connect to TraCI server and start running */
-		cMessage* executeOneTimestepTrigger; /**< self-message scheduled for when to next call executeOneTimestep */
+    size_t nextNodeVectorIndex; /**< next OMNeT++ module vector index to use */
+    std::map<std::string, cModule*> hosts; /**< vector of all hosts managed by us */
+    std::set<std::string> unEquippedHosts;
+    std::set<std::string> subscribedVehicles; /**< all vehicles we have already subscribed to */
+    uint32_t activeVehicleCount; /**< number of vehicles, be it parking or driving **/
+    uint32_t parkingVehicleCount; /**< number of parking vehicles, derived from parking start/end events */
+    uint32_t drivingVehicleCount; /**< number of driving, as reported by sumo */
+    bool autoShutdownTriggered;
+    cMessage* connectAndStartTrigger; /**< self-message scheduled for when to connect to TraCI server and start running */
+    cMessage* executeOneTimestepTrigger; /**< self-message scheduled for when to next call executeOneTimestep */
 
-		BaseWorldUtility* world;
-		BaseConnectionManager* cc;
+    BaseWorldUtility* world;
+    BaseConnectionManager* cc;
 
-		uint32_t getCurrentTimeMs(); /**< get current simulation time (in ms) */
+    uint32_t getCurrentTimeMs(); /**< get current simulation time (in ms) */
 
-		void executeOneTimestep(); /**< read and execute all commands for the next timestep */
+    void executeOneTimestep(); /**< read and execute all commands for the next timestep */
 
-		virtual void init_traci();
+    virtual void init_traci();
 
-		void addModule(std::string nodeId, std::string type, std::string name, std::string displayString, const Coord& position, std::string road_id = "", double speed = -1, double angle = -1);
-		cModule* getManagedModule(std::string nodeId); /**< returns a pointer to the managed module named moduleName, or 0 if no module can be found */
-		void deleteModule(std::string nodeId);
+    void addModule(std::string nodeId, std::string type, std::string name,
+            std::string displayString, const Coord& position,
+            std::string road_id = "", double speed = -1, double angle = -1);
+    cModule* getManagedModule(std::string nodeId); /**< returns a pointer to the managed module named moduleName, or 0 if no module can be found */
+    void deleteModule(std::string nodeId);
 
-		bool isModuleUnequipped(std::string nodeId); /**< returns true if this vehicle is Unequipped */
+    bool isModuleUnequipped(std::string nodeId); /**< returns true if this vehicle is Unequipped */
 
-		/**
-		 * returns whether a given position lies within the simulation's region of interest.
-		 * Modules are destroyed and re-created as managed vehicles leave and re-enter the ROI
-		 */
-		bool isInRegionOfInterest(const TraCICoord& position, std::string road_id, double speed, double angle);
+    /**
+     * returns whether a given position lies within the simulation's region of interest.
+     * Modules are destroyed and re-created as managed vehicles leave and re-enter the ROI
+     */
+    bool isInRegionOfInterest(const TraCICoord& position, std::string road_id,
+            double speed, double angle);
 
-		/**
-		 * convert TraCI angle to OMNeT++ angle (in rad)
-		 */
-		double traci2omnetAngle(double angle) const;
+    /**
+     * convert TraCI angle to OMNeT++ angle (in rad)
+     */
+    double traci2omnetAngle(double angle) const;
 
-		/**
-		 * convert OMNeT++ angle (in rad) to TraCI angle
-		 */
-		double omnet2traciAngle(double angle) const;
+    /**
+     * convert OMNeT++ angle (in rad) to TraCI angle
+     */
+    double omnet2traciAngle(double angle) const;
 
-		/**
-		 * adds a new vehicle to the queue which are tried to be inserted at the next SUMO time step;
-		 */
-		void insertNewVehicle();
+    /**
+     * adds a new vehicle to the queue which are tried to be inserted at the next SUMO time step;
+     */
+    void insertNewVehicle();
 
-		/**
-		 * tries to add all vehicles in the vehicle queue to SUMO;
-		 */
-		void insertVehicles();
+    /**
+     * tries to add all vehicles in the vehicle queue to SUMO;
+     */
+    void insertVehicles();
 
-		void subscribeToVehicleVariables(std::string vehicleId);
-		void unsubscribeFromVehicleVariables(std::string vehicleId);
-		void processSimSubscription(std::string objectId, TraCIBuffer& buf);
-		void processVehicleSubscription(std::string objectId, TraCIBuffer& buf);
-		void processSubcriptionResult(TraCIBuffer& buf);
+    void subscribeToVehicleVariables(std::string vehicleId);
+    void unsubscribeFromVehicleVariables(std::string vehicleId);
+    void processSimSubscription(std::string objectId, TraCIBuffer& buf);
+    void processVehicleSubscription(std::string objectId, TraCIBuffer& buf);
+    void processSubcriptionResult(TraCIBuffer& buf);
 
 };
 }
 
 namespace Veins {
-class TraCIScenarioManagerAccess
-{
-	public:
-		TraCIScenarioManager* get() {
-			return FindModule<TraCIScenarioManager*>::findGlobalModule();
-		};
+class TraCIScenarioManagerAccess {
+public:
+    TraCIScenarioManager* get() {
+        return FindModule<TraCIScenarioManager*>::findGlobalModule();
+    }
+    ;
 };
 }
 
