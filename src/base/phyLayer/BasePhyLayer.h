@@ -358,7 +358,7 @@ protected:
 	/**
 	 * @brief Filters the passed AirFrame's Signal by every registered AnalogueModel.
 	 */
-	virtual void filterSignal(AirFrame *frame);
+	virtual bool filterSignal(AirFrame *frame);
 
 	/**
 	 * @brief Called the moment the simulated switching process of the Radio is finished.

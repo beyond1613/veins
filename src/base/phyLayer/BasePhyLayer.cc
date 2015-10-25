@@ -399,7 +399,28 @@ void BasePhyLayer::handleAirFrameStartReceive(AirFrame* frame) {
     assert(frame->getSignal().getReceptionStart() == simTime());
 
     frame->getSignal().setReceptionSenderInfo(frame);
-    filterSignal(frame);
+    // filterSignal(frame);
+
+    /*
+     * Description : Ignored Received AirFrame sent from our own Head OR Tail Transmitter ; schedule the message directly to its end
+     * Date : 2015-10-16
+     * Author : Will Tseng
+     */
+    bool sameVehicle = filterSignal(frame);
+    if (sameVehicle) {
+        coreEV << "Ignored Received AirFrame " << frame
+                      << " sent from our own Head OR Tail Transmitter, schedule the message directly to its end" << endl;
+
+        //if no decider is defined we will schedule the message directly to its end
+        Signal& signal = frame->getSignal();
+
+        simtime_t signalEndTime = signal.getReceptionStart()
+                + frame->getDuration();
+        frame->setState(END_RECEIVE);
+
+        sendSelfMessage(frame, signalEndTime);
+
+    }
 
     if (decider && isKnownProtocolId(frame->getProtocolId())) {
         frame->setState(RECEIVING);
@@ -639,9 +660,7 @@ void BasePhyLayer::sendSelfMessage(cMessage* msg, simtime_t_cref time) {
     scheduleAt(time, msg);
 }
 
-void BasePhyLayer::filterSignal(AirFrame *frame) {
-    if (analogueModels.empty())
-        return;
+bool BasePhyLayer::filterSignal(AirFrame *frame) {
 
     ChannelAccess * const senderModule =
             dynamic_cast<ChannelAccess * const >(frame->getSenderModule());
@@ -666,10 +685,22 @@ void BasePhyLayer::filterSignal(AirFrame *frame) {
             receiverMobility ?
                     receiverMobility->getCurrentPosition(/*sStart*/) :
                     NoMobiltyPos;
+    /*
+     * Description : Decide whether sender and receiver are mounted on the same vehicles?  ex flow0.0 , flow0.0-2
+     * Date : 2015-10-16
+     * Author : Will Tseng
+     */
+    if (sendersPos == receiverPos)
+        return true;
+
+    if (analogueModels.empty())
+        return false;
 
     for (AnalogueModelList::const_iterator it = analogueModels.begin();
             it != analogueModels.end(); it++)
         (*it)->filterSignal(frame, sendersPos, receiverPos);
+
+    return false;
 }
 
 //--Destruction--------------------------------
