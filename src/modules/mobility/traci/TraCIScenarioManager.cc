@@ -677,6 +677,16 @@ void TraCIScenarioManager::processSimSubscription(std::string objectId,
                 std::string idstring;
                 buf >> idstring;
 
+                /*
+                 *  Description : Make a string for idstring2
+                 *  Date : 2015-10-13
+                 *  Author : Will Tseng
+                 */
+                std::string idstring2;
+                std::stringstream ss;
+                ss << idstring << -2;
+                idstring2 = ss.str();
+
                 if (subscribedVehicles.find(idstring)
                         != subscribedVehicles.end()) {
                     subscribedVehicles.erase(idstring);
@@ -685,11 +695,25 @@ void TraCIScenarioManager::processSimSubscription(std::string objectId,
 
                 // check if this object has been deleted already (e.g. because it was outside the ROI)
                 cModule* mod = getManagedModule(idstring);
-                if (mod)
+                if (mod) {
                     deleteModule(idstring);
 
+                    /*
+                     *  Description : delete module for idstring2 as well
+                     *  Date : 2015-10-13
+                     *  Author : Will Tseng
+                     */
+                    deleteModule(idstring2);
+                }
                 if (unEquippedHosts.find(idstring) != unEquippedHosts.end()) {
                     unEquippedHosts.erase(idstring);
+
+                    /*
+                     *  Description : erase idstring2 from unEquippedHosts as well
+                     *  Date : 2015-10-13
+                     *  Author : Will Tseng
+                     */
+                    unEquippedHosts.erase(idstring2);
                 }
 
             }
@@ -711,13 +735,37 @@ void TraCIScenarioManager::processSimSubscription(std::string objectId,
                 std::string idstring;
                 buf >> idstring;
 
+                /*
+                 *  Description : Make a string for idstring2
+                 *  Date : 2015-10-13
+                 *  Author : Will Tseng
+                 */
+                std::string idstring2;
+                std::stringstream ss;
+                ss << idstring << -2;
+                idstring2 = ss.str();
+
                 // check if this object has been deleted already (e.g. because it was outside the ROI)
                 cModule* mod = getManagedModule(idstring);
-                if (mod)
+                if (mod) {
                     deleteModule(idstring);
 
+                    /*
+                     *  Description : delete module of idstring2 as well
+                     *  Date : 2015-10-13
+                     *  Author : Will Tseng
+                     */
+                    deleteModule(idstring2);
+                }
                 if (unEquippedHosts.find(idstring) != unEquippedHosts.end()) {
                     unEquippedHosts.erase(idstring);
+
+                    /*
+                     *  Description : delete idstring2 from unEquippedHost as well
+                     *  Date : 2015-10-13
+                     *  Author : Will Tseng
+                     */
+                    unEquippedHosts.erase(idstring2);
                 }
 
             }
@@ -821,6 +869,8 @@ void TraCIScenarioManager::processVehicleSubscription(std::string objectId,
     double angle_traci;
     int signals;
     int numRead = 0;
+
+    std::string objectId2;
 
     uint8_t variableNumber_resp;
     buf >> variableNumber_resp;
@@ -936,6 +986,22 @@ void TraCIScenarioManager::processVehicleSubscription(std::string objectId,
 
     cModule* mod = getManagedModule(objectId);
 
+    /*
+     *  Description : objectId is head and objectId2 is for tail. Make a string for objectId2
+     *  Date : 2015-10-13
+     *  Author : Will Tseng
+     */
+    std::stringstream ss;
+    ss << objectId << -2;
+    objectId2 = ss.str();
+
+    /*
+     *  Description : Retrieve cModule for objectId2
+     *  Date : 2015-10-13
+     *  Author : Will Tseng
+     */
+    cModule* mod2 = getManagedModule(objectId2);
+
     // is it in the ROI?
     bool inRoi = isInRegionOfInterest(TraCICoord(px, py), edge, speed, angle);
     if (!inRoi) {
@@ -950,12 +1016,22 @@ void TraCIScenarioManager::processVehicleSubscription(std::string objectId,
              *  Author : Will Tseng
              */
             deleteModule(objectId2);
+
             MYDEBUG << "Vehicle #" << objectId2 << " left region of interest"
                            << endl;
 
         } else if (unEquippedHosts.find(objectId) != unEquippedHosts.end()) {
             unEquippedHosts.erase(objectId);
             MYDEBUG << "Vehicle (unequipped) # " << objectId
+                           << " left region of interest" << endl;
+
+            /*
+             *  Description : erase objectId2 from unEquippedHosts as well
+             *  Date : 2015-10-13
+             *  Author : Will Tseng
+             */
+            unEquippedHosts.erase(objectId2);
+            MYDEBUG << "Vehicle (unequipped) # " << objectId2
                            << " left region of interest" << endl;
         }
         return;
@@ -970,6 +1046,16 @@ void TraCIScenarioManager::processVehicleSubscription(std::string objectId,
         addModule(objectId, moduleType, moduleName, moduleDisplayString, p,
                 edge, speed, angle);
         MYDEBUG << "Added vehicle #" << objectId << endl;
+
+        /*
+         *  Description : create module for objectId2
+         *  Date : 2015-10-13
+         *  Author : Will Tseng
+         */
+        addModule(objectId2, moduleType, moduleName, moduleDisplayString, p,
+                edge, speed, angle);
+        MYDEBUG << "Added vehicle #" << objectId2 << endl;
+
     } else {
         // module existed - update position
         for (cModule::SubmoduleIterator iter(mod); !iter.end(); iter++) {
@@ -982,6 +1068,23 @@ void TraCIScenarioManager::processVehicleSubscription(std::string objectId,
                            << p.y << endl;
             mm->nextPosition(p, edge, speed, angle);
         }
+
+        /*
+         *  Description : update position of objectId2
+         *  Date : 2015-10-13
+         *  Author : Will Tseng
+         */
+        for (cModule::SubmoduleIterator iter(mod2); !iter.end(); iter++) {
+            cModule* submod2 = iter();
+            ifInetTraCIMobilityCallNextPosition(submod2, p, edge, speed, angle);
+            TraCIMobility* mm2 = dynamic_cast<TraCIMobility*>(submod2);
+            if (!mm2)
+                continue;
+            MYDEBUG << "module " << objectId2 << " moving to " << p.x << ","
+                           << p.y << endl;
+            mm2->nextPosition(p, edge, speed, angle);
+        }
+
     }
 
 }
