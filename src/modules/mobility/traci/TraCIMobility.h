@@ -160,6 +160,7 @@ public:
         std::string externalId = getExternalId();
         if (externalId.find('-') == std::string::npos) // objectID != flowx.x-2 (vs flowx.x)
             getCommandInterface()->changeRoute(externalId, roadId, travelTime);
+
     }
     void commandNewRoute(std::string roadId) {
         getCommandInterface()->newRoute(getExternalId(), roadId);
