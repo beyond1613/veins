@@ -431,12 +431,8 @@ void BasePhyLayer::handleAirFrameStartReceive(AirFrame* frame) {
 
         //if no decider is defined we will schedule the message directly to its end
         Signal& signal = frame->getSignal();
-
-        simtime_t signalEndTime = signal.getReceptionStart()
-                + frame->getDuration();
         frame->setState(END_RECEIVE);
-
-        sendSelfMessage(frame, signalEndTime);
+        sendSelfMessage(frame, signal.getReceptionStart());
 
     } else {
         if (decider && isKnownProtocolId(frame->getProtocolId())) {
