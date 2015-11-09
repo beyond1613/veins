@@ -406,10 +406,28 @@ void BasePhyLayer::handleAirFrameStartReceive(AirFrame* frame) {
      * Date : 2015-10-16
      * Author : Will Tseng
      */
-    bool sameVehicle = filterSignal(frame);
-    if (sameVehicle) {
-        coreEV << "Ignored Received AirFrame " << frame
-                      << " sent from our own Head OR Tail Transmitter, schedule the message directly to its end" << endl;
+    //emptyAnalogueModels = -1;
+    //sameVehicle = 1;
+    //NLOSLink = 2;
+
+    int flag = filterSignal(frame);
+    if (flag) {
+        switch (flag) {
+        case -1:
+            coreEV << "AirFrame " << frame << " analogueModels.empty() = true"
+                          << endl;
+            break;
+        case 1:
+            coreEV << "Ignored Received AirFrame " << frame
+                          << " sent from our own Head OR Tail Transmitter, schedule the message directly to its end"
+                          << endl;
+            break;
+        case 2:
+            coreEV << "Ignored Received AirFrame " << frame
+                          << " sent through NLOS Link, schedule the message directly to its end"
+                          << endl;
+            break;
+        }
 
         //if no decider is defined we will schedule the message directly to its end
         Signal& signal = frame->getSignal();
@@ -420,23 +438,23 @@ void BasePhyLayer::handleAirFrameStartReceive(AirFrame* frame) {
 
         sendSelfMessage(frame, signalEndTime);
 
-    }
-
-    if (decider && isKnownProtocolId(frame->getProtocolId())) {
-        frame->setState(RECEIVING);
-
-        //pass the AirFrame the first time to the Decider
-        handleAirFrameReceiving(frame);
-
-        //if no decider is defined we will schedule the message directly to its end
     } else {
-        Signal& signal = frame->getSignal();
+        if (decider && isKnownProtocolId(frame->getProtocolId())) {
+            frame->setState(RECEIVING);
 
-        simtime_t signalEndTime = signal.getReceptionStart()
-                + frame->getDuration();
-        frame->setState(END_RECEIVE);
+            //pass the AirFrame the first time to the Decider
+            handleAirFrameReceiving(frame);
 
-        sendSelfMessage(frame, signalEndTime);
+            //if no decider is defined we will schedule the message directly to its end
+        } else {
+            Signal& signal = frame->getSignal();
+
+            simtime_t signalEndTime = signal.getReceptionStart()
+                    + frame->getDuration();
+            frame->setState(END_RECEIVE);
+
+            sendSelfMessage(frame, signalEndTime);
+        }
     }
 }
 
@@ -660,8 +678,7 @@ void BasePhyLayer::sendSelfMessage(cMessage* msg, simtime_t_cref time) {
     scheduleAt(time, msg);
 }
 
-bool BasePhyLayer::filterSignal(AirFrame *frame) {
-
+int BasePhyLayer::filterSignal(AirFrame *frame) {
     ChannelAccess * const senderModule =
             dynamic_cast<ChannelAccess * const >(frame->getSenderModule());
     ChannelAccess * const receiverModule =
@@ -691,16 +708,17 @@ bool BasePhyLayer::filterSignal(AirFrame *frame) {
      * Author : Will Tseng
      */
     if (sendersPos == receiverPos)
-        return true;
+        return 1;
 
     if (analogueModels.empty())
-        return false;
+        return -1;
 
     for (AnalogueModelList::const_iterator it = analogueModels.begin();
-            it != analogueModels.end(); it++)
-        (*it)->filterSignal(frame, sendersPos, receiverPos);
-
-    return false;
+            it != analogueModels.end(); it++) {
+        if(((*it)->filterSignal(frame, sendersPos, receiverPos)))
+            return 2;
+    }
+    return 0;
 }
 
 //--Destruction--------------------------------

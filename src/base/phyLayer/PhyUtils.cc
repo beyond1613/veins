@@ -7,7 +7,7 @@ using Veins::AirFrame;
 using namespace std;
 using Veins::Radio;
 
-void RadioStateAnalogueModel::filterSignal(AirFrame *frame, const Coord& sendersPos, const Coord& receiverPos)
+int RadioStateAnalogueModel::filterSignal(AirFrame *frame, const Coord& sendersPos, const Coord& receiverPos)
 {
 	Signal&      signal     = frame->getSignal();
 	RSAMMapping* attMapping = new RSAMMapping(this, signal.getReceptionStart(), signal.getReceptionEnd());

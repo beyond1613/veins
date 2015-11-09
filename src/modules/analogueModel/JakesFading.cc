@@ -87,7 +87,7 @@ JakesFading::~JakesFading() {
 	delete[] angleOfArrival;
 }
 
-void JakesFading::filterSignal(AirFrame *frame, const Coord& sendersPos, const Coord& receiverPos)
+int JakesFading::filterSignal(AirFrame *frame, const Coord& sendersPos, const Coord& receiverPos)
 {
 	Signal&                signal           = frame->getSignal();
 	ChannelMobilityPtrType senderMobility   = dynamic_cast<ChannelAccess *>(frame->getSenderModule())->getMobilityModule();

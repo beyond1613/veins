@@ -29,7 +29,7 @@ double SimplePathlossConstMapping::getValue(const Argument& pos) const
 
 
 
-void SimplePathlossModel::filterSignal(AirFrame *frame, const Coord& sendersPos, const Coord& receiverPos)
+int SimplePathlossModel::filterSignal(AirFrame *frame, const Coord& sendersPos, const Coord& receiverPos)
 {
 	Signal& signal = frame->getSignal();
 
@@ -41,7 +41,7 @@ void SimplePathlossModel::filterSignal(AirFrame *frame, const Coord& sendersPos,
 
 	if(sqrDistance <= 1.0) {
 		//attenuation is negligible
-		return;
+		return 0;
 	}
 
 	// wavelength in meters (this is only used for debug purposes here
@@ -70,6 +70,8 @@ void SimplePathlossModel::filterSignal(AirFrame *frame, const Coord& sendersPos,
 
 	/* at last add the created attenuation mapping to the signal */
 	signal.addAttenuation(attMapping);
+
+	return 0;
 }
 
 double SimplePathlossModel::calcPathloss(const Coord& receiverPos, const Coord& sendersPos)

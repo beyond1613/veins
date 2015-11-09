@@ -125,7 +125,7 @@ public:
 				double carrierFrequency, simtime_t_cref interval);
 	virtual ~JakesFading();
 
-	virtual void filterSignal(AirFrame *, const Coord&, const Coord&);
+	virtual int filterSignal(AirFrame *, const Coord&, const Coord&);
 };
 
 #endif /* JAKESFADING_H_ */

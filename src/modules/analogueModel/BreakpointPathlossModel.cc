@@ -7,7 +7,7 @@ using Veins::AirFrame;
 #define debugEV (ev.isDisabled()||!debug) ? ev : ev << "PhyLayer(BreakpointPathlossModel): "
 
 
-void BreakpointPathlossModel::filterSignal(AirFrame *frame, const Coord& sendersPos, const Coord& receiverPos) {
+int BreakpointPathlossModel::filterSignal(AirFrame *frame, const Coord& sendersPos, const Coord& receiverPos) {
 	Signal& signal = frame->getSignal();
 
 	/** Calculate the distance factor */
@@ -18,7 +18,7 @@ void BreakpointPathlossModel::filterSignal(AirFrame *frame, const Coord& senders
 
 	if(distance <= 1.0) {
 		//attenuation is negligible
-		return;
+		return 0;
 	}
 
 	double attenuation = 1;
@@ -48,4 +48,6 @@ void BreakpointPathlossModel::filterSignal(AirFrame *frame, const Coord& senders
 
 	/* at last add the created attenuation mapping to the signal */
 	signal.addAttenuation(attMapping);
+
+	return 0;
 }

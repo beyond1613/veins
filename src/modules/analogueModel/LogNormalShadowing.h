@@ -74,7 +74,7 @@ public:
 	/**
 	 * @brief Calculates shadowing loss based on a normal gaussian function.
 	 */
-	virtual void filterSignal(AirFrame*, const Coord&, const Coord&);
+	virtual int filterSignal(AirFrame*, const Coord&, const Coord&);
 };
 
 #endif /* LOGNORMALSHADOWING_H_ */

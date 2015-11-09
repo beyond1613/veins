@@ -38,7 +38,7 @@ public:
 	 * @param sendersPos	The position of the frame sender.
 	 * @param receiverPos	The position of frame receiver.
 	 */
-	virtual void filterSignal(AirFrame *frame, const Coord& sendersPos, const Coord& receiverPos) = 0;
+	virtual int filterSignal(AirFrame *frame, const Coord& sendersPos, const Coord& receiverPos) = 0;
 };
 
 #endif /*ANALOGUEMODEL_*/

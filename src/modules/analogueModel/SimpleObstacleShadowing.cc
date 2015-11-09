@@ -39,7 +39,7 @@ SimpleObstacleShadowing::SimpleObstacleShadowing(ObstacleControl& obstacleContro
 }
 
 
-void SimpleObstacleShadowing::filterSignal(AirFrame *frame, const Coord& sendersPos, const Coord& receiverPos) {
+int SimpleObstacleShadowing::filterSignal(AirFrame *frame, const Coord& sendersPos, const Coord& receiverPos) {
 	Signal& s = frame->getSignal();
 
 	double factor = obstacleControl.calculateAttenuation(sendersPos, receiverPos);
@@ -50,4 +50,10 @@ void SimpleObstacleShadowing::filterSignal(AirFrame *frame, const Coord& senders
 	const DimensionSet& domain = hasFrequency ? DimensionSet::timeFreqDomain : DimensionSet::timeDomain;
 	ConstantSimpleConstMapping* attMapping = new ConstantSimpleConstMapping(domain, factor);
 	s.addAttenuation(attMapping);
+
+	if(factor != 1)
+	    return 1;
+	else
+	    return 0;
+
 }

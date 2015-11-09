@@ -136,7 +136,7 @@ public:
 	 * @brief Filters a specified AirFrame's Signal by adding an attenuation
 	 * over time to the Signal.
 	 */
-	virtual void filterSignal(AirFrame *, const Coord&, const Coord&);
+	virtual int filterSignal(AirFrame *, const Coord&, const Coord&);
 
 	/**
 	 * @brief Method to calculate the attenuation value for pathloss.
