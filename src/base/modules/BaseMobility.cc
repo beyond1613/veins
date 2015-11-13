@@ -106,8 +106,9 @@ void BaseMobility::initialize(int stage) {
                     "node position specified in omnetpp.ini exceeds playgroundsize");
         }
 
-        // set speed and direction of the Move
+        // set speed, angle and direction of the Move
         move.setSpeed(0);
+        move.setAngle(0);
         move.setDirectionByVector(Coord::ZERO);
     } else if (stage == 1) {
         coreEV << "initializing BaseMobility stage " << stage << endl;

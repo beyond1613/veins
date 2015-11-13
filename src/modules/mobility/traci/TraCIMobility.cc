@@ -104,6 +104,7 @@ void TraCIMobility::initialize(int stage) {
         move.setStart(nextPos);
         move.setDirectionByVector(Coord(cos(angle), -sin(angle)));
         move.setSpeed(speed);
+        move.setAngle(angle);
 
         WATCH(road_id);
         WATCH(speed);
@@ -173,6 +174,7 @@ void TraCIMobility::preInitialize(std::string external_id,
     move.setStart(nextPos);
     move.setDirectionByVector(Coord(cos(angle), -sin(angle)));
     move.setSpeed(speed);
+    move.setAngle(angle);
 
     isPreInitialized = true;
 }
@@ -234,6 +236,7 @@ void TraCIMobility::changePosition() {
     move.setStart(Coord(nextPos.x, nextPos.y, move.getCurrentPosition().z)); // keep z position
     move.setDirectionByVector(Coord(cos(angle), -sin(angle)));
     move.setSpeed(speed);
+    move.setAngle(angle);
     if (ev.isGUI())
         updateDisplayString();
     fixIfHostGetsOutside();
