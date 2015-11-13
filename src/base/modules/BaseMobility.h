@@ -178,6 +178,17 @@ public:
     virtual Coord getCurrentSpeed() const {
         return move.getDirection() * move.getSpeed();
     }
+
+    /** @brief Returns the current direction at the current simulation time. */
+    virtual Coord getCurrentDirection() const {
+        return move.getDirection();
+    }
+
+    /** @brief Returns the current  angle at the current simulation time. */
+    virtual double getCurrentAngle() const {
+        return move.getAngle();
+    }
+
 protected:
     /**
      * @brief Maps the passed icon size tag (is) to an actual size in pixels.
