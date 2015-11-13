@@ -48,6 +48,8 @@ protected:
     Coord direction;
     /** @brief speed of the host in meters per second **/
     double speed;
+    /** @brief angle of the host in rad **/
+    double angle;
 
 public:
     Move() :
@@ -72,6 +74,20 @@ public:
      */
     void setSpeed(double speed) {
         this->speed = speed;
+    }
+
+    /**
+     * @brief Returns the current angle.
+     */
+    double getAngle() const {
+        return angle;
+    }
+
+    /**
+     * @brief Sets the current angle in rad.
+     */
+    void setAngle(double angle) {
+        this->angle = angle;
     }
 
     /**
@@ -171,7 +187,7 @@ public:
         std::ostringstream ost;
         ost << " HostMove " << " startPos: " << startPos.info()
                 << " direction: " << direction.info() << " startTime: "
-                << startTime << " speed: " << speed;
+                << startTime << " speed: " << speed << " angle: " << angle;
         return ost.str();
     }
 };
