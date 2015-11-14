@@ -50,6 +50,8 @@ protected:
     double speed;
     /** @brief angle of the host in rad **/
     double angle;
+    /** @brief heading of the host ; Head = 1, Tail = -1 **/
+    int heading;
 
 public:
     Move() :
@@ -88,6 +90,20 @@ public:
      */
     void setAngle(double angle) {
         this->angle = angle;
+    }
+
+    /**
+     * @brief Returns the current heading.
+     */
+    int getHeading() const {
+        return heading;
+    }
+
+    /**
+     * @brief Sets the current heading.
+     */
+    void setHeading(double heading) {
+        this->heading = heading;
     }
 
     /**
@@ -187,7 +203,7 @@ public:
         std::ostringstream ost;
         ost << " HostMove " << " startPos: " << startPos.info()
                 << " direction: " << direction.info() << " startTime: "
-                << startTime << " speed: " << speed << " angle: " << angle;
+                << startTime << " speed: " << speed << " angle: " << angle << " heading: " << heading;
         return ost.str();
     }
 };
