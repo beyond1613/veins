@@ -159,13 +159,14 @@ void TraCIMobility::handleSelfMsg(cMessage *msg) {
 
 void TraCIMobility::preInitialize(std::string external_id,
         const Coord& position, std::string road_id, double speed,
-        double angle) {
+        double angle, int heading) {
     this->external_id = external_id;
     this->lastUpdate = 0;
     this->roadPosition = position;
     this->road_id = road_id;
     this->speed = speed;
     this->angle = angle;
+    this->heading = heading;
     this->antennaPositionOffset = par("antennaPositionOffset");
 
     Coord nextPos = calculateAntennaPosition(roadPosition);
@@ -175,6 +176,7 @@ void TraCIMobility::preInitialize(std::string external_id,
     move.setDirectionByVector(Coord(cos(angle), -sin(angle)));
     move.setSpeed(speed);
     move.setAngle(angle);
+    move.setHeading(heading);
 
     isPreInitialized = true;
 }
@@ -237,6 +239,7 @@ void TraCIMobility::changePosition() {
     move.setDirectionByVector(Coord(cos(angle), -sin(angle)));
     move.setSpeed(speed);
     move.setAngle(angle);
+    move.setHeading(heading);
     if (ev.isGUI())
         updateDisplayString();
     fixIfHostGetsOutside();

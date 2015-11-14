@@ -76,7 +76,7 @@ public:
 
     virtual void handleSelfMsg(cMessage *msg);
     virtual void preInitialize(std::string external_id, const Coord& position,
-            std::string road_id = "", double speed = -1, double angle = -1);
+            std::string road_id = "", double speed = -1, double angle = -1, int heading = 0);
     virtual void nextPosition(const Coord& position, std::string road_id = "",
             double speed = -1, double angle = -1,
             TraCIScenarioManager::VehicleSignal signals =
@@ -234,6 +234,7 @@ protected:
     std::string road_id; /**< updated by nextPosition() */
     double speed; /**< updated by nextPosition() */
     double angle; /**< updated by nextPosition() */
+    int heading;  /**< updated by changePosition() called by addModule() ONLY ; indicate this module is for Head / Tail */
     TraCIScenarioManager::VehicleSignal signals; /**<updated by nextPosition() */
 
     cMessage* startAccidentMsg;
