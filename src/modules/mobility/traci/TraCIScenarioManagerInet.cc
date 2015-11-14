@@ -5,10 +5,10 @@
 #define WITH_TRACI
 #include "mobility/single/TraCIMobility.h"
 
-void ifInetTraCIMobilityCallPreInitialize(cModule* mod, const std::string& nodeId, const Coord& position, const std::string& road_id, double speed, double angle) {
+void ifInetTraCIMobilityCallPreInitialize(cModule* mod, const std::string& nodeId, const Coord& position, const std::string& road_id, double speed, double angle, int heading) {
     ::TraCIMobility* inetmm = dynamic_cast< ::TraCIMobility*>(mod);
     if (!inetmm) return;
-    inetmm->preInitialize(nodeId, ::Coord(position.x, position.y), road_id, speed, angle);
+    inetmm->preInitialize(nodeId, ::Coord(position.x, position.y), road_id, speed, angle, heading);
 }
 
 void ifInetTraCIMobilityCallNextPosition(cModule* mod, const Coord& p, const std::string& edge, double speed, double angle) {
@@ -21,7 +21,7 @@ void ifInetTraCIMobilityCallNextPosition(cModule* mod, const Coord& p, const std
 
 void ifInetTraCIMobilityCallPreInitialize(cModule* mod,
         const std::string& nodeId, const Coord& position,
-        const std::string& road_id, double speed, double angle) {
+        const std::string& road_id, double speed, double angle, int heading) {
     return;
 }
 

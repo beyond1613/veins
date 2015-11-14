@@ -351,7 +351,7 @@ void TraCIScenarioManager::handleSelfMsg(cMessage *msg) {
 // name: host;Car;i=vehicle.gif
 void TraCIScenarioManager::addModule(std::string nodeId, std::string type,
         std::string name, std::string displayString, const Coord& position,
-        std::string road_id, double speed, double angle) {
+        std::string road_id, double speed, double angle, int heading) {
 
     if (hosts.find(nodeId) != hosts.end())
         error("tried adding duplicate module");
@@ -391,11 +391,11 @@ void TraCIScenarioManager::addModule(std::string nodeId, std::string type,
     for (cModule::SubmoduleIterator iter(mod); !iter.end(); iter++) {
         cModule* submod = iter();
         ifInetTraCIMobilityCallPreInitialize(submod, nodeId, position, road_id,
-                speed, angle);
+                speed, angle, heading);
         TraCIMobility* mm = dynamic_cast<TraCIMobility*>(submod);
         if (!mm)
             continue;
-        mm->preInitialize(nodeId, position, road_id, speed, angle);
+        mm->preInitialize(nodeId, position, road_id, speed, angle, heading);
     }
 
     mod->callInitialize();
@@ -1041,10 +1041,13 @@ void TraCIScenarioManager::processVehicleSubscription(std::string objectId,
         return;
     }
 
+    int headingHead = 1;
+    int headingTail = -1;
+
     if (!mod) {
         // no such module - need to create
         addModule(objectId, moduleType, moduleName, moduleDisplayString, p,
-                edge, speed, angle);
+                edge, speed, angle, headingHead);
         MYDEBUG << "Added vehicle #" << objectId << endl;
 
         /*
@@ -1053,7 +1056,7 @@ void TraCIScenarioManager::processVehicleSubscription(std::string objectId,
          *  Author : Will Tseng
          */
         addModule(objectId2, moduleType, moduleName, moduleDisplayString, p,
-                edge, speed, angle);
+                edge, speed, angle, headingTail);
         MYDEBUG << "Added vehicle #" << objectId2 << endl;
 
     } else {
