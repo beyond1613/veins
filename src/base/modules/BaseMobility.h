@@ -189,6 +189,13 @@ public:
         return move.getAngle();
     }
 
+    /** @brief Returns the current  angle at the current simulation time. */
+    virtual int getCurrentHeading() const {
+        return move.getHeading();
+    }
+
+
+
 protected:
     /**
      * @brief Maps the passed icon size tag (is) to an actual size in pixels.
