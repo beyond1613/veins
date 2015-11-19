@@ -172,7 +172,7 @@ class Decider80211p: public BaseDecider {
 			myBusyTime(0),
 			myStartTime(simTime().dbl()),
 			curSyncFrame(0),
-			collectCollisionStats(collectCollisionStatistics),
+			collectCollisionStats(true),
 			collisions(0) {
 			phy11p = dynamic_cast<Decider80211pToPhy80211pInterface*>(phy);
 			assert(phy11p);
