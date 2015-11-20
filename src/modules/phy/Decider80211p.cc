@@ -51,42 +51,65 @@ simtime_t Decider80211p::processNewSignal(AirFrame* msg) {
     if (recvPower < sensitivity) {
         //annotate the frame, so that we won't try decoding it at its end
         frame->setUnderSensitivity(true);
-        //check channel busy status. a superposition of low power frames might turn channel status to busy
-        if (cca(simTime(), NULL) == false) {
-            setChannelIdleStatus(false);
-        }
+
+        // VLC Full-Duplex
+        /*
+         //check channel busy status. a superposition of low power frames might turn channel status to busy
+         if (cca(simTime(), NULL) == false) {
+         setChannelIdleStatus(false);
+         }
+         */
         return signal.getReceptionEnd();
     } else {
+        // VLC Full-Duplex
+        /*
+         setChannelIdleStatus(false);
 
-        setChannelIdleStatus(false);
+         if (phy11p->getRadioState() == Radio::TX) {
+         frame->setBitError(true);
+         frame->setWasTransmitting(true);
+         DBG_D11P << "AirFrame: " << frame->getId() << " (" << recvPower
+         << ") received, while already sending. Setting BitErrors to true"
+         << std::endl;
+         } else {
 
-        if (phy11p->getRadioState() == Radio::TX) {
-            frame->setBitError(true);
-            frame->setWasTransmitting(true);
-            DBG_D11P << "AirFrame: " << frame->getId() << " (" << recvPower
-                            << ") received, while already sending. Setting BitErrors to true"
-                            << std::endl;
+         if (!curSyncFrame) {
+         //NIC is not yet synced to any frame, so lock and try to decode this frame
+         curSyncFrame = frame;
+         DBG_D11P << "AirFrame: " << frame->getId() << " with ("
+         << recvPower << " > " << sensitivity
+         << ") -> Trying to receive AirFrame."
+         << std::endl;
+         } else {
+         //NIC is currently trying to decode another frame. this frame will be simply treated as interference
+         DBG_D11P << "AirFrame: " << frame->getId() << " with ("
+         << recvPower << " > " << sensitivity
+         << ") -> Already synced to another AirFrame. Treating AirFrame as interference."
+         << std::endl;
+         }
+
+         //channel turned busy
+         //measure communication density
+         myBusyTime += signal.getDuration().dbl();
+         }
+         */
+        if (!curSyncFrame) {
+            //NIC is not yet synced to any frame, so lock and try to decode this frame
+            curSyncFrame = frame;
+            DBG_D11P << "AirFrame: " << frame->getId() << " with (" << recvPower
+                            << " > " << sensitivity
+                            << ") -> Trying to receive AirFrame." << std::endl;
         } else {
-
-            if (!curSyncFrame) {
-                //NIC is not yet synced to any frame, so lock and try to decode this frame
-                curSyncFrame = frame;
-                DBG_D11P << "AirFrame: " << frame->getId() << " with ("
-                                << recvPower << " > " << sensitivity
-                                << ") -> Trying to receive AirFrame."
-                                << std::endl;
-            } else {
-                //NIC is currently trying to decode another frame. this frame will be simply treated as interference
-                DBG_D11P << "AirFrame: " << frame->getId() << " with ("
-                                << recvPower << " > " << sensitivity
-                                << ") -> Already synced to another AirFrame. Treating AirFrame as interference."
-                                << std::endl;
-            }
-
-            //channel turned busy
-            //measure communication density
-            myBusyTime += signal.getDuration().dbl();
+            //NIC is currently trying to decode another frame. this frame will be simply treated as interference
+            DBG_D11P << "AirFrame: " << frame->getId() << " with (" << recvPower
+                            << " > " << sensitivity
+                            << ") -> Already synced to another AirFrame. Treating AirFrame as interference."
+                            << std::endl;
         }
+
+        //channel turned busy
+        //measure communication density
+        myBusyTime += signal.getDuration().dbl();
         return signal.getReceptionEnd();
     }
 }
@@ -495,19 +518,22 @@ simtime_t Decider80211p::processSignalEnd(AirFrame* msg) {
         delete result;
     }
 
-    if (phy11p->getRadioState() == Radio::TX) {
-        DBG_D11P << "I'm currently sending\n";
-    }
-    //check if channel is idle now
-    else if (cca(simTime(), frame) == false) {
-        DBG_D11P << "Channel not yet idle!\n";
-    } else {
-        //might have been idle before (when the packet rxpower was below sens)
-        if (isChannelIdle != true) {
-            DBG_D11P << "Channel idle now!\n";
-            setChannelIdleStatus(true);
-        }
-    }
+    // VLC Full-Duplex
+    /*
+     if (phy11p->getRadioState() == Radio::TX) {
+     DBG_D11P << "I'm currently sending\n";
+     }
+     //check if channel is idle now
+     else if (cca(simTime(), frame) == false) {
+     DBG_D11P << "Channel not yet idle!\n";
+     } else {
+     //might have been idle before (when the packet rxpower was below sens)
+     if (isChannelIdle != true) {
+     DBG_D11P << "Channel idle now!\n";
+     setChannelIdleStatus(true);
+     }
+     }
+     */
     return notAgain;
 }
 

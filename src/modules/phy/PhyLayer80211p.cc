@@ -408,14 +408,22 @@ void PhyLayer80211p::handleSelfMessage(cMessage* msg) {
         //check if there is another packet on the chan, and change the chan-state to idle
         Decider80211p* dec = dynamic_cast<Decider80211p*>(decider);
         assert(dec);
-        if (dec->cca(simTime(), NULL)) {
-            //chan is idle
-            DBG << "Channel idle after transmit!\n";
-            dec->setChannelIdleStatus(true);
 
-        } else {
-            DBG << "Channel not yet idle after transmit!\n";
-        }
+        // VLC Full-Duplex
+        /*
+         if (dec->cca(simTime(), NULL)) {
+         //chan is idle
+         DBG << "Channel idle after transmit!\n";
+         dec->setChannelIdleStatus(true);
+
+         } else {
+         DBG << "Channel not yet idle after transmit!\n";
+         }
+         */
+        //chan is idle
+        DBG << "Channel idle after transmit!\n";
+        dec->setChannelIdleStatus(true);
+
         break;
     }
         //radio switch over
