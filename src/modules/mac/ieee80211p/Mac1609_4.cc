@@ -188,7 +188,6 @@ void Mac1609_4::handleSelfMsg(cMessage* msg) {
         mac->setSrcAddr(myMacAddress);
         mac->encapsulate(pktToSend->dup());
 
-
         simtime_t sendingDuration = getFrameDuration(mac->getBitLength());
 
         //simtime_t sendingDuration = RADIODELAY_11P + getFrameDuration(mac->getBitLength());
