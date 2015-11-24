@@ -100,6 +100,7 @@ void ChannelAccess::sendToChannel(cPacket *msg) {
 
             sendDirect(msg, delay, msg->getDuration(),
                     i->second->getOwnerModule(), radioEnd);
+
         } else {
             coreEV << "Nic is not connected to any gates!" << endl;
             delete msg;

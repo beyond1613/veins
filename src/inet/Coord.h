@@ -17,14 +17,12 @@
  * part of:     framework implementation developed by tkn
  **************************************************************************/
 
-
 #ifndef _COORD_H
 #define _COORD_H
 
 #include <omnetpp.h>
 #include "MiXiMDefs.h"
 #include "FWMath.h"
-
 
 /**
  * @brief Class for storing 3D coordinates.
@@ -34,8 +32,7 @@
  * @ingroup utils
  * @author Christian Frank
  */
-class MIXIM_API Coord : public cObject
-{
+class MIXIM_API Coord: public cObject {
 public:
     /** @brief Constant with all values set to 0. */
     static const Coord ZERO;
@@ -49,20 +46,28 @@ public:
     /*@}*/
 
 private:
-  void copy(const Coord& other) { x = other.x; y = other.y; z = other.z; }
+    void copy(const Coord& other) {
+        x = other.x;
+        y = other.y;
+        z = other.z;
+    }
 
 public:
     /** @brief Default constructor. */
-    Coord()
-        : x(0.0), y(0.0), z(0.0) {}
+    Coord() :
+            x(0.0), y(0.0), z(0.0) {
+    }
 
     /** @brief Initializes a coordinate. */
-    Coord(double x, double y, double z = 0.0)
-        : x(x), y(y), z(z) {}
+    Coord(double x, double y, double z = 0.0) :
+            x(x), y(y), z(z) {
+    }
 
     /** @brief Initializes coordinate from other coordinate. */
-    Coord(const Coord& other)
-        : cObject(other) { copy(other); }
+    Coord(const Coord& other) :
+            cObject(other) {
+        copy(other);
+    }
 
     /** @brief Returns a string with the value of the coordinate. */
     std::string info() const;
@@ -131,7 +136,8 @@ public:
      * This operator can change the dimension of the coordinate.
      */
     Coord& operator=(const Coord& other) {
-        if (this == &other) return *this;
+        if (this == &other)
+            return *this;
         cObject::operator=(other);
         copy(other);
         return *this;
@@ -155,7 +161,8 @@ public:
      */
     friend bool operator==(const Coord& a, const Coord& b) {
         // FIXME: this implementation is not transitive
-        return FWMath::close(a.x, b.x) && FWMath::close(a.y, b.y) && FWMath::close(a.z, b.z);
+        return FWMath::close(a.x, b.x) && FWMath::close(a.y, b.y)
+                && FWMath::close(a.z, b.z);
     }
 
     /**
@@ -164,7 +171,7 @@ public:
      * Negation of the operator==.
      */
     friend bool operator!=(const Coord& a, const Coord& b) {
-        return !(a==b);
+        return !(a == b);
     }
 
     /**
@@ -191,16 +198,14 @@ public:
     /**
      * @brief Returns the square of the length of this Coords position vector.
      */
-    double squareLength() const
-    {
+    double squareLength() const {
         return x * x + y * y + z * z;
     }
 
     /**
      * @brief Returns the length of this Coords position vector.
      */
-    double length() const
-    {
+    double length() const {
         return sqrt(squareLength());
     }
 
@@ -211,9 +216,8 @@ public:
      * @param upperBound The lower bound of the rectangle.
      */
     bool isInBoundary(const Coord& lowerBound, const Coord& upperBound) const {
-        return  lowerBound.x <= x && x <= upperBound.x &&
-                lowerBound.y <= y && y <= upperBound.y &&
-                lowerBound.z <= z && z <= upperBound.z;
+        return lowerBound.x <= x && x <= upperBound.x && lowerBound.y <= y
+                && y <= upperBound.y && lowerBound.z <= z && z <= upperBound.z;
     }
 
     /**
@@ -221,8 +225,7 @@ public:
      */
     Coord min(const Coord& a) {
         return Coord(this->x < a.x ? this->x : a.x,
-                     this->y < a.y ? this->y : a.y,
-                     this->z < a.z ? this->z : a.z);
+                this->y < a.y ? this->y : a.y, this->z < a.z ? this->z : a.z);
     }
 
     /**
@@ -230,14 +233,11 @@ public:
      */
     Coord max(const Coord& a) {
         return Coord(this->x > a.x ? this->x : a.x,
-                     this->y > a.y ? this->y : a.y,
-                     this->z > a.z ? this->z : a.z);
+                this->y > a.y ? this->y : a.y, this->z > a.z ? this->z : a.z);
     }
 };
 
-
-inline std::ostream& operator<<(std::ostream& os, const Coord& coord)
-{
+inline std::ostream& operator<<(std::ostream& os, const Coord& coord) {
     return os << "(" << coord.x << "," << coord.y << "," << coord.z << ")";
 }
 
