@@ -93,6 +93,11 @@ public:
         return tmp;
     }
 
+    /** @brief Multiplies a coordinate vector by another coordinate vector. = vector inner product */
+    friend double operator*(const Coord& a, const Coord& b) {
+        return (a.x * b.x + a.y * b.y);
+    }
+
     /** @brief Divides a coordinate vector by a real number. */
     friend Coord operator/(const Coord& a, double f) {
         Coord tmp(a);
