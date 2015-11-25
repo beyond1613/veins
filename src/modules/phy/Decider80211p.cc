@@ -475,8 +475,10 @@ simtime_t Decider80211p::processSignalEnd(AirFrame* msg) {
     if (frame->getUnderSensitivity()) {
         //this frame was not even detected by the radio card
         result = new DeciderResult80211(false, 0, 0);
-    } else if (frame->getWasTransmitting()
-            || phy11p->getRadioState() == Radio::TX) {
+    } else if (frame->getWasTransmitting()) {
+        //} else if (frame->getWasTransmitting()
+        //            || phy11p->getRadioState() == Radio::TX) {
+
         //this frame was received while sending
         whileSending = true;
         result = new DeciderResult80211(false, 0, 0);
