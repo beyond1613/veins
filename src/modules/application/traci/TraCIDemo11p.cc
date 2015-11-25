@@ -23,80 +23,91 @@
 using Veins::TraCIMobilityAccess;
 using Veins::AnnotationManagerAccess;
 
-const simsignalwrap_t TraCIDemo11p::parkingStateChangedSignal = simsignalwrap_t(TRACI_SIGNAL_PARKING_CHANGE_NAME);
+const simsignalwrap_t TraCIDemo11p::parkingStateChangedSignal = simsignalwrap_t(
+        TRACI_SIGNAL_PARKING_CHANGE_NAME);
 
 Define_Module(TraCIDemo11p);
 
 void TraCIDemo11p::initialize(int stage) {
-	BaseWaveApplLayer::initialize(stage);
-	if (stage == 0) {
-		traci = TraCIMobilityAccess().get(getParentModule());
-		annotations = AnnotationManagerAccess().getIfExists();
-		ASSERT(annotations);
+    BaseWaveApplLayer::initialize(stage);
+    if (stage == 0) {
+        traci = TraCIMobilityAccess().get(getParentModule());
+        annotations = AnnotationManagerAccess().getIfExists();
+        ASSERT(annotations);
 
-		sentMessage = false;
-		lastDroveAt = simTime();
-		findHost()->subscribe(parkingStateChangedSignal, this);
-		isParking = false;
-		sendWhileParking = par("sendWhileParking").boolValue();
-	}
+        sentMessage = false;
+        lastDroveAt = simTime();
+        findHost()->subscribe(parkingStateChangedSignal, this);
+        isParking = false;
+        sendWhileParking = par("sendWhileParking").boolValue();
+    }
 }
 
 void TraCIDemo11p::onBeacon(WaveShortMessage* wsm) {
 }
 
 void TraCIDemo11p::onData(WaveShortMessage* wsm) {
-	findHost()->getDisplayString().updateWith("r=16,green");
-	annotations->scheduleErase(1, annotations->drawLine(wsm->getSenderPos(), traci->getPositionAt(simTime()), "blue"));
+    findHost()->getDisplayString().updateWith("r=16,green");
+    annotations->scheduleErase(1,
+            annotations->drawLine(wsm->getSenderPos(),
+                    traci->getPositionAt(simTime()), "blue"));
 
-	if (traci->getRoadId()[0] != ':') traci->commandChangeRoute(wsm->getWsmData(), 9999);
-	if (!sentMessage) sendMessage(wsm->getWsmData());
+    if (traci->getRoadId()[0] != ':')
+        traci->commandChangeRoute(wsm->getWsmData(), 9999);
+    if (!sentMessage)
+        sendMessage(wsm->getWsmData());
 }
 
 void TraCIDemo11p::sendMessage(std::string blockedRoadId) {
-	sentMessage = true;
+    sentMessage = true;
 
-	t_channel channel = dataOnSch ? type_SCH : type_CCH;
-	WaveShortMessage* wsm = prepareWSM("data", dataLengthBits, channel, dataPriority, -1,2);
-	wsm->setWsmData(blockedRoadId.c_str());
-	sendWSM(wsm);
+    t_channel channel = dataOnSch ? type_SCH : type_CCH;
+    WaveShortMessage* wsm = prepareWSM("data", dataLengthBits, channel,
+            dataPriority, -1, 2);
+    wsm->setWsmData(blockedRoadId.c_str());
+    sendWSM(wsm);
 }
-void TraCIDemo11p::receiveSignal(cComponent* source, simsignal_t signalID, cObject* obj) {
-	Enter_Method_Silent();
-	if (signalID == mobilityStateChangedSignal) {
-		handlePositionUpdate(obj);
-	}
-	else if (signalID == parkingStateChangedSignal) {
-		handleParkingUpdate(obj);
-	}
+void TraCIDemo11p::receiveSignal(cComponent* source, simsignal_t signalID,
+        cObject* obj) {
+    Enter_Method_Silent
+    ();
+    if (signalID == mobilityStateChangedSignal) {
+        handlePositionUpdate(obj);
+    } else if (signalID == parkingStateChangedSignal) {
+        handleParkingUpdate(obj);
+    }
 }
 void TraCIDemo11p::handleParkingUpdate(cObject* obj) {
-	isParking = traci->getParkingState();
-	if (sendWhileParking == false) {
-		if (isParking == true) {
-			(FindModule<BaseConnectionManager*>::findGlobalModule())->unregisterNic(this->getParentModule()->getSubmodule("nic"));
-		}
-		else {
-			Coord pos = traci->getCurrentPosition();
-			(FindModule<BaseConnectionManager*>::findGlobalModule())->registerNic(this->getParentModule()->getSubmodule("nic"), (ChannelAccess*) this->getParentModule()->getSubmodule("nic")->getSubmodule("phy80211p"), &pos);
-		}
-	}
+    isParking = traci->getParkingState();
+    if (sendWhileParking == false) {
+        if (isParking == true) {
+            (FindModule<BaseConnectionManager*>::findGlobalModule())->unregisterNic(
+                    this->getParentModule()->getSubmodule("nic"));
+        } else {
+            Coord pos = traci->getCurrentPosition();
+            (FindModule<BaseConnectionManager*>::findGlobalModule())->registerNic(
+                    this->getParentModule()->getSubmodule("nic"),
+                    (ChannelAccess*) this->getParentModule()->getSubmodule(
+                            "nic")->getSubmodule("phy80211p"), &pos);
+        }
+    }
 }
 void TraCIDemo11p::handlePositionUpdate(cObject* obj) {
-	BaseWaveApplLayer::handlePositionUpdate(obj);
+    BaseWaveApplLayer::handlePositionUpdate(obj);
 
-	// stopped for for at least 10s?
-	if (traci->getSpeed() < 1) {
-		if (simTime() - lastDroveAt >= 10) {
-			findHost()->getDisplayString().updateWith("r=16,red");
-			if (!sentMessage) sendMessage(traci->getRoadId());
-		}
-	}
-	else {
-		lastDroveAt = simTime();
-	}
+    // stopped for for at least 10s?
+    if (traci->getSpeed() < 1) {
+        if (simTime() - lastDroveAt >= 10) {
+            findHost()->getDisplayString().updateWith("r=16,red");
+            if (!sentMessage)
+                sendMessage(traci->getRoadId());
+        }
+    } else {
+        lastDroveAt = simTime();
+    }
 }
 void TraCIDemo11p::sendWSM(WaveShortMessage* wsm) {
-	if (isParking && !sendWhileParking) return;
-	sendDelayedDown(wsm,individualOffset);
+    if (isParking && !sendWhileParking)
+        return;
+    sendDelayedDown(wsm, individualOffset);
 }
