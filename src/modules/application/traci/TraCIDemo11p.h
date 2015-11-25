@@ -39,6 +39,7 @@ protected:
     TraCIMobility* traci;
     AnnotationManager* annotations;
     simtime_t lastDroveAt;
+    simtime_t lastTransmitAt;
     bool sentMessage;
     bool isParking;
     bool sendWhileParking;

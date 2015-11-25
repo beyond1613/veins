@@ -24,7 +24,7 @@ using Veins::TraCIMobilityAccess;
 using Veins::AnnotationManagerAccess;
 
 const simsignalwrap_t TraCIDemo11p::parkingStateChangedSignal = simsignalwrap_t(
-        TRACI_SIGNAL_PARKING_CHANGE_NAME);
+TRACI_SIGNAL_PARKING_CHANGE_NAME);
 
 Define_Module(TraCIDemo11p);
 
@@ -37,6 +37,7 @@ void TraCIDemo11p::initialize(int stage) {
 
         sentMessage = false;
         lastDroveAt = simTime();
+        lastTransmitAt = simTime();
         findHost()->subscribe(parkingStateChangedSignal, this);
         isParking = false;
         sendWhileParking = par("sendWhileParking").boolValue();
@@ -54,8 +55,10 @@ void TraCIDemo11p::onData(WaveShortMessage* wsm) {
 
     if (traci->getRoadId()[0] != ':')
         traci->commandChangeRoute(wsm->getWsmData(), 9999);
-    if (!sentMessage)
-        sendMessage(wsm->getWsmData());
+    /*
+     if (!sentMessage)
+     sendMessage(wsm->getWsmData());
+     */
 }
 
 void TraCIDemo11p::sendMessage(std::string blockedRoadId) {
@@ -95,19 +98,32 @@ void TraCIDemo11p::handleParkingUpdate(cObject* obj) {
 void TraCIDemo11p::handlePositionUpdate(cObject* obj) {
     BaseWaveApplLayer::handlePositionUpdate(obj);
 
-    // stopped for for at least 10s?
-    if (traci->getSpeed() < 1) {
-        if (simTime() - lastDroveAt >= 10) {
-            findHost()->getDisplayString().updateWith("r=16,red");
-            if (!sentMessage)
-                sendMessage(traci->getRoadId());
+    int pktNum = 0;
+    // Periodically transmit packet  10 packets within 1(s)
+    if (simTime() > 20 & (simTime() - lastTransmitAt > 0.1)) {
+        while (pktNum < 10) {
+            sendMessage(traci->getRoadId());
+            pktNum++;
         }
-    } else {
-        lastDroveAt = simTime();
+        lastTransmitAt = simTime();
     }
+
+    /*
+     // stopped for for at least 10s?
+     if (traci->getSpeed() < 1) {
+     if (simTime() - lastDroveAt >= 10) {
+     findHost()->getDisplayString().updateWith("r=16,red");
+     if (!sentMessage)
+     sendMessage(traci->getRoadId());
+     }
+     } else {
+     lastDroveAt = simTime();
+     }
+     */
 }
 void TraCIDemo11p::sendWSM(WaveShortMessage* wsm) {
-    if (isParking && !sendWhileParking)
-        return;
+    //if (isParking && !sendWhileParking)
+    //    return;
+
     sendDelayedDown(wsm, individualOffset);
 }
