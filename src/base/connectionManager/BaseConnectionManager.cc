@@ -67,7 +67,9 @@ void BaseConnectionManager::initialize(int stage) {
         else
             sendDirect = false;
 
-        maxInterferenceDistance = calcInterfDist();
+        // support VLC
+        //maxInterferenceDistance = calcInterfDist();
+        maxInterferenceDistance = 100;
         maxDistSquared = maxInterferenceDistance * maxInterferenceDistance;
 
         //----initialize node grid-----
