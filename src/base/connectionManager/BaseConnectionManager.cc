@@ -99,19 +99,19 @@ void BaseConnectionManager::initialize(int stage) {
         NicMatrix matrix;
 
         for (int i = 0; i < gridDim.z; ++i) {
-            row.push_back(entries);			//copy empty NicEntries to RowVector
+            row.push_back(entries);         //copy empty NicEntries to RowVector
         }
-        for (int i = 0; i < gridDim.y; ++i) {//fill the ColVector with copies of
-            matrix.push_back(row);			 //the RowVector.
+        for (int i = 0; i < gridDim.y; ++i) { //fill the ColVector with copies of
+            matrix.push_back(row);           //the RowVector.
         }
-        for (int i = 0; i < gridDim.x; ++i) {	//fill the grid with copies of
-            nicGrid.push_back(matrix);			//the matrix.
+        for (int i = 0; i < gridDim.x; ++i) {   //fill the grid with copies of
+            nicGrid.push_back(matrix);          //the matrix.
         }
         ccEV << " using " << gridDim.x << "x" << gridDim.y << "x" << gridDim.z
                     << " grid" << endl;
 
-        //step 3 -	calculate the factor which maps the coordinate of a node
-        //			to the grid cell
+        //step 3 -  calculate the factor which maps the coordinate of a node
+        //          to the grid cell
         //if we use a 1x1 grid every coordinate is mapped to (0,0, 0)
         findDistance = Coord(
                 std::max(playgroundSize->x, maxInterferenceDistance),
@@ -186,6 +186,7 @@ void BaseConnectionManager::checkGrid(BaseConnectionManager::GridCoord& oldCell,
 
     // structure to find union of grid squares
     CoordSet gridUnion(74);
+    CoordSet gridUnionVLC(74);
 
     // find nic at old position
     NicEntries& oldCellEntries = getCellEntries(oldCell);
@@ -200,20 +201,26 @@ void BaseConnectionManager::checkGrid(BaseConnectionManager::GridCoord& oldCell,
 
     if ((gridDim.x == 1) && (gridDim.y == 1) && (gridDim.z == 1)) {
         gridUnion.add(oldCell);
+        gridUnionVLC.add(oldCell);
     } else {
         //add grid around oldPos
         fillUnionWithNeighbors(gridUnion, oldCell);
+        fillUnionWithNeighbors(gridUnionVLC, oldCell);
 
         if (oldCell != newCell) {
             //add grid around newPos
             fillUnionWithNeighbors(gridUnion, newCell);
+            fillUnionWithNeighbors(gridUnionVLC, newCell);
         }
     }
+
+    ccEV << "updateNicConnections when position of nic #" << id << " updated."
+                << endl;
 
     GridCoord* c = gridUnion.next();
     while (c != 0) {
         ccEV << "Update cons in [" << c->info() << "]" << endl;
-        updateNicConnections(getCellEntries(*c), nic);
+        updateNicConnections(gridUnionVLC, getCellEntries(*c), nic);
         c = gridUnion.next();
     }
 }
@@ -258,48 +265,315 @@ void BaseConnectionManager::fillUnionWithNeighbors(CoordSet& gridUnion,
     }
 }
 
-bool BaseConnectionManager::isInRange(
-        BaseConnectionManager::NicEntries::mapped_type pFromNic,
-        BaseConnectionManager::NicEntries::mapped_type pToNic) {
-    double dDistance = 0.0;
+// is pToNic(rxNic) in range of pFromNic(txNic) ??
+bool BaseConnectionManager::isInRange(CoordSet& gridUnionVLC,
+        BaseConnectionManager::NicEntries::mapped_type senderNic,
+        BaseConnectionManager::NicEntries::mapped_type receiverNic) {
 
-    if (useTorus) {
-        dDistance = sqrTorusDist(pFromNic->pos, pToNic->pos, *playgroundSize);
-    } else {
-        dDistance = pFromNic->pos.sqrdist(pToNic->pos);
+    int headlight = 1;
+    int taillight = -1;
+
+    ChannelAccess* senderModule = senderNic->chAccess;
+    ChannelAccess* receiverModule = receiverNic->chAccess;
+
+    // Position
+    Coord senderPos = senderModule->getMobilityModule()->getCurrentPosition();
+    Coord receiverPos =
+            receiverModule->getMobilityModule()->getCurrentPosition();
+
+    double distancefromSendertoReceiver = senderPos.distance(receiverPos);
+
+    // Angle
+    double senderAngle = senderModule->getMobilityModule()->getCurrentAngle();
+    double receiverAngle =
+            receiverModule->getMobilityModule()->getCurrentAngle();
+
+    // Heading
+    int senderHeading = senderModule->getMobilityModule()->getCurrentHeading();
+    int receiverHeading =
+            receiverModule->getMobilityModule()->getCurrentHeading();
+
+    // Normalized Vector
+    Coord vectorfromTXtoRX = (receiverPos - senderPos)
+            / distancefromSendertoReceiver;
+    Coord vectorTXheading = Coord(cos(senderAngle), sin(senderAngle))
+            * senderHeading;
+    Coord vectorRXheading = Coord(cos(receiverAngle), sin(receiverAngle))
+            * receiverHeading;
+
+    // skip the nic module on the same vehicle
+    if (senderPos == receiverPos) {
+        ccEV << "senderNic #" << senderNic->nicId << " and receiverNic #"
+                    << receiverNic->nicId << " are on the same vehicle" << endl;
+        return false;
     }
-    return (dDistance <= maxDistSquared);
+
+    // Sender is Headlight
+    if (senderHeading == headlight) {
+        ccEV << "senderNic #" << senderNic->nicId << " using Headlight" << endl;
+        // Is it out of transmission distance?
+        if (distancefromSendertoReceiver <= 100) {
+            // Is it out of transmission angle?
+            if ((vectorfromTXtoRX * vectorTXheading) > cos(M_PI_4)) {
+                // Is it out of possible bearing?
+                if ((vectorfromTXtoRX * vectorRXheading) < 0) {
+                    /*
+                     GridCoord* c = gridUnionVLC.next();
+                     while (c != 0) {
+                     ccEV << "Test gridUnionVLC in udpateNicConnection : [" << c->info()
+                     << "]" << endl;
+                     c = gridUnionVLC.next();
+                     }
+                     gridUnionVLC.resetCurrent();
+                     */
+                    ccEV << "TO DO : receverNic #" << receiverNic->nicId
+                                << " : Distance = "
+                                << distancefromSendertoReceiver << ", Angle = -"
+                                << 180
+                                        * acos(
+                                                vectorfromTXtoRX
+                                                        * vectorTXheading)
+                                        / M_PI << " or +"
+                                << 180
+                                        * acos(
+                                                vectorfromTXtoRX
+                                                        * vectorTXheading)
+                                        / M_PI
+                                << ", Bearng to vectorfromTXtoRX = -"
+                                << 180
+                                        * acos(
+                                                vectorfromTXtoRX
+                                                        * vectorRXheading)
+                                        / M_PI << " or +"
+                                << 180
+                                        * acos(
+                                                vectorfromTXtoRX
+                                                        * vectorRXheading)
+                                        / M_PI << endl;
+                    return true;
+                } else {
+                    ccEV
+                                << "OUT OF POSSIBLE BEARING to vectorfromTXtoRX (90, 180) or (-90, -180) ; receiverNic #"
+                                << receiverNic->nicId
+                                << " is on bearing to vectorfromTXtoRX -"
+                                << 180
+                                        * acos(
+                                                vectorfromTXtoRX
+                                                        * vectorRXheading)
+                                        / M_PI << " or +"
+                                << 180
+                                        * acos(
+                                                vectorfromTXtoRX
+                                                        * vectorRXheading)
+                                        / M_PI << " for senderNic #"
+                                << senderNic->nicId << ", vectorfromTXtoRX ("
+                                << vectorfromTXtoRX.x << ", "
+                                << vectorfromTXtoRX.y << ") * vectorRXheading("
+                                << vectorRXheading.x << ", "
+                                << vectorRXheading.y << ") = "
+                                << (vectorfromTXtoRX * vectorRXheading) << endl;
+                }
+            } else {
+                ccEV
+                            << "OUT OF POSSIBLE TRANSMISSION ANGLE (-45, 45) ; receiverNic #"
+                            << receiverNic->nicId << " is on angle -"
+                            << 180 * acos(vectorfromTXtoRX * vectorTXheading)
+                                    / M_PI << " or +"
+                            << 180 * acos(vectorfromTXtoRX * vectorTXheading)
+                                    / M_PI << " of senderNic #"
+                            << senderNic->nicId << ", vectorfromTXtoRX ("
+                            << vectorfromTXtoRX.x << ", " << vectorfromTXtoRX.y
+                            << ") * vectorTXheading(" << vectorTXheading.x
+                            << ", " << vectorTXheading.y << ") = "
+                            << (vectorfromTXtoRX * vectorTXheading) << endl;
+                return false;
+            }
+        } else {
+            ccEV
+                        << "OUT OF POSSIBLE TRANSMISSION RANGE 100(m) ; distance between senderNic #"
+                        << senderNic->nicId << " and receiverNic #"
+                        << receiverNic->nicId << " = "
+                        << distancefromSendertoReceiver << endl;
+            return false;
+        }
+    }
+    // Sender is Taillight
+    else if (senderHeading == taillight) {
+        ccEV << "senderNic #" << senderNic->nicId << " using Taillight" << endl;
+        if (distancefromSendertoReceiver <= 30) {
+            if ((vectorfromTXtoRX * vectorTXheading) > cos(M_PI / 3)) {
+                if ((vectorfromTXtoRX * vectorRXheading) < 0) {
+                    /*
+                     GridCoord* c = gridUnionVLC.next();
+                     while (c != 0) {
+                     ccEV << "Test gridUnionVLC in udpateNicConnection : [" << c->info()
+                     << "]" << endl;
+                     c = gridUnionVLC.next();
+                     }
+                     gridUnionVLC.resetCurrent();
+                     */
+                    ccEV << "TO DO : receverNic #" << receiverNic->nicId
+                                << " : Distance = "
+                                << distancefromSendertoReceiver << ", Angle = -"
+                                << 180
+                                        * acos(
+                                                vectorfromTXtoRX
+                                                        * vectorTXheading)
+                                        / M_PI << " or +"
+                                << 180
+                                        * acos(
+                                                vectorfromTXtoRX
+                                                        * vectorTXheading)
+                                        / M_PI
+                                << ", Bearng to vectorfromTXtoRX = -"
+                                << 180
+                                        * acos(
+                                                vectorfromTXtoRX
+                                                        * vectorRXheading)
+                                        / M_PI << " or +"
+                                << 180
+                                        * acos(
+                                                vectorfromTXtoRX
+                                                        * vectorRXheading)
+                                        / M_PI << endl;
+                    return true;
+                } else {
+                    ccEV
+                                << "OUT OF POSSIBLE BEARING to vectorfromTXtoRX (90, 180) or (-90, -180) ; receiverNic #"
+                                << receiverNic->nicId
+                                << " is on bearing to vectorfromTXtoRX -"
+                                << 180
+                                        * acos(
+                                                vectorfromTXtoRX
+                                                        * vectorRXheading)
+                                        / M_PI << " or +"
+                                << 180
+                                        * acos(
+                                                vectorfromTXtoRX
+                                                        * vectorRXheading)
+                                        / M_PI << " for senderNic #"
+                                << senderNic->nicId << ", vectorfromTXtoRX ("
+                                << vectorfromTXtoRX.x << ", "
+                                << vectorfromTXtoRX.y << ") * vectorRXheading("
+                                << vectorRXheading.x << ", "
+                                << vectorRXheading.y << ") = "
+                                << (vectorfromTXtoRX * vectorRXheading) << endl;
+                }
+            } else {
+                ccEV
+                            << "OUT OF POSSIBLE TRANSMISSION ANGLE (-60, 60) ; receiverNic #"
+                            << receiverNic->nicId << " is on angle -"
+                            << 180 * acos(vectorfromTXtoRX * vectorTXheading)
+                                    / M_PI << " or +"
+                            << 180 * acos(vectorfromTXtoRX * vectorTXheading)
+                                    / M_PI << " of senderNic #"
+                            << senderNic->nicId << ", vectorfromTXtoRX ("
+                            << vectorfromTXtoRX.x << ", " << vectorfromTXtoRX.y
+                            << ") * vectorTXheading(" << vectorTXheading.x
+                            << ", " << vectorTXheading.y << ") = "
+                            << (vectorfromTXtoRX * vectorTXheading) << endl;
+                return false;
+            }
+        } else {
+            ccEV
+                        << "OUT OF POSSIBLE TRANSMISSION RANGE 30(m) ; distance between senderNic #"
+                        << senderNic->nicId << " and receiverNic #"
+                        << receiverNic->nicId << " = "
+                        << distancefromSendertoReceiver << endl;
+            return false;
+        }
+    } else
+        ccEV << "unknown senderHeading" << senderHeading << endl;
+
+    /*
+     double dDistance = 0.0;
+
+     if (useTorus) {
+     dDistance = sqrTorusDist(pFromNic->pos, pToNic->pos, *playgroundSize);
+     } else {
+     dDistance = pFromNic->pos.sqrdist(pToNic->pos);
+     }
+     return (dDistance <= maxDistSquared);
+     */
 }
 
-void BaseConnectionManager::updateNicConnections(NicEntries& nmap,
-        BaseConnectionManager::NicEntries::mapped_type nic) {
-    int id = nic->nicId;
+// Support filter out NLOS blocked by vehicles
+/*
+ void BaseConnectionManager::updateNicConnections(NicEntries& nmap,
+ BaseConnectionManager::NicEntries::mapped_type nic) {
+ int id = nic->nicId;
+
+ for (NicEntries::iterator i = nmap.begin(); i != nmap.end(); ++i) {
+ NicEntries::mapped_type nic_i = i->second;
+
+ // no recursive connections
+ if (nic_i->nicId == id)
+ continue;
+
+ bool inRange = isInRange(nic, nic_i);
+ bool connected = nic->isConnected(nic_i);
+
+ if (inRange && !connected) {
+ // nodes within communication range: connect
+ // nodes within communication range && not yet connected
+ ccEV << "nic #" << id << " and #" << nic_i->nicId << " are in range"
+ << endl;
+ nic->connectTo(nic_i);
+ nic_i->connectTo(nic);
+ } else if (!inRange && connected) {
+ // out of range: disconnect
+ // out of range, and still connected
+ ccEV << "nic #" << id << " and #" << nic_i->nicId
+ << " are NOT in range" << endl;
+ nic->disconnectFrom(nic_i);
+ nic_i->disconnectFrom(nic);
+ }
+ }
+ }
+ */
+
+void BaseConnectionManager::updateNicConnections(CoordSet& gridUnionVLC,
+        NicEntries& nmap, BaseConnectionManager::NicEntries::mapped_type nic) {
+    //int id = nic->nicId;
 
     for (NicEntries::iterator i = nmap.begin(); i != nmap.end(); ++i) {
-        NicEntries::mapped_type nic_i = i->second;
+        NicEntries::mapped_type nic_tx = i->second;
 
-        // no recursive connections
-        if (nic_i->nicId == id)
-            continue;
+        GridCoord* cVLC = gridUnionVLC.next();
+        while (cVLC != 0) {
+            ccEV << "vs cons in [" << cVLC->info() << "]" << endl;
+            NicEntries nmapVLC = getCellEntries(*cVLC);
 
-        bool inRange = isInRange(nic, nic_i);
-        bool connected = nic->isConnected(nic_i);
+            for (NicEntries::iterator j = nmapVLC.begin(); j != nmapVLC.end();
+                    ++j) {
+                NicEntries::mapped_type nic_rx = j->second;
 
-        if (inRange && !connected) {
-            // nodes within communication range: connect
-            // nodes within communication range && not yet connected
-            ccEV << "nic #" << id << " and #" << nic_i->nicId << " are in range"
-                        << endl;
-            nic->connectTo(nic_i);
-            nic_i->connectTo(nic);
-        } else if (!inRange && connected) {
-            // out of range: disconnect
-            // out of range, and still connected
-            ccEV << "nic #" << id << " and #" << nic_i->nicId
-                        << " are NOT in range" << endl;
-            nic->disconnectFrom(nic_i);
-            nic_i->disconnectFrom(nic);
+                // no recursive connections
+                if (nic_tx->nicId == nic_rx->nicId)
+                    continue;
+
+                bool inRange = isInRange(gridUnionVLC, nic_tx, nic_rx);
+                bool connected = nic_tx->isConnected(nic_rx);
+
+                if (inRange && !connected) {
+                    // nodes within communication range: connect
+                    // nodes within communication range && not yet connected
+                    ccEV << "nic_rx #" << nic_rx->nicId
+                                << " are in range of nic_tx #" << nic_tx->nicId
+                                << endl;
+                    nic_tx->connectTo(nic_rx);
+                } else if (!inRange && connected) {
+                    // out of range: disconnect
+                    // out of range, and still connected
+                    ccEV << "nic_rx #" << nic_rx->nicId
+                                << " are NOT in range of nic_tx # "
+                                << nic_tx->nicId << endl;
+                    nic_tx->disconnectFrom(nic_rx);
+                }
+            }
+            cVLC = gridUnionVLC.next();
         }
+        gridUnionVLC.resetCurrent();
     }
 }
 

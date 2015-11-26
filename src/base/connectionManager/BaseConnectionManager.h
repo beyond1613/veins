@@ -272,7 +272,8 @@ protected:
 
 private:
     /** @brief Manages the connections of a registered nic. */
-    void updateNicConnections(NicEntries& nmap, NicEntries::mapped_type nic);
+    void updateNicConnections(CoordSet& gridUnionVLC, NicEntries& nmap,
+            NicEntries::mapped_type nic);
 
     /**
      * @brief Check connections of a nic in the grid
@@ -353,8 +354,8 @@ protected:
      * @param pToNic   Nic target point which should be checked.
      * @return true if the nic's are in range and can be connected, false if not.
      */
-    virtual bool isInRange(NicEntries::mapped_type pFromNic,
-            NicEntries::mapped_type pToNic);
+    virtual bool isInRange(CoordSet& gridUnionVLC,
+            NicEntries::mapped_type pFromNic, NicEntries::mapped_type pToNic);
 
 public:
 
