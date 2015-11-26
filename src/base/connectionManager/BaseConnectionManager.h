@@ -372,6 +372,8 @@ public:
     bool registerNic(cModule* nic, ChannelAccess* chAccess,
             const Coord* nicPos);
 
+    bool registerNicLite(cModule* nic, ChannelAccess* chAccess,
+            const Coord* nicPos);
     /**
      * @brief Unregisters a NIC such that its connections aren't managed by the CM
      * anymore.
@@ -388,6 +390,8 @@ public:
 
     /** @brief Updates the position information of a registered nic.*/
     void updateNicPos(int nicID, const Coord* newPos);
+
+    void updateNicPosLite(int nicID, const Coord* newPos);
 
     /** @brief Returns the ingates of all nics in range*/
     const NicEntry::GateList& getGateList(int nicID) const;

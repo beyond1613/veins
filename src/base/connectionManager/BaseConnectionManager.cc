@@ -338,6 +338,41 @@ bool BaseConnectionManager::registerNic(cModule* nic, ChannelAccess* chAccess,
     return sendDirect;
 }
 
+bool BaseConnectionManager::registerNicLite(cModule* nic,
+        ChannelAccess* chAccess, const Coord* nicPos) {
+    assert(nic != 0);
+
+    int nicID = nic->getId();
+    ccEV << " registering nic #" << nicID << endl;
+
+    // create new NicEntry
+    NicEntries::mapped_type nicEntry;
+
+    if (sendDirect)
+        nicEntry = new NicEntryDirect(coreDebug);
+    else
+        nicEntry = new NicEntryDebug(coreDebug);
+
+    // fill nicEntry
+    nicEntry->nicPtr = nic;
+    nicEntry->nicId = nicID;
+    nicEntry->hostId = nic->getParentModule()->getId();
+    nicEntry->pos = *nicPos;
+    nicEntry->chAccess = chAccess;
+
+    // add to map
+    nics[nicID] = nicEntry;
+
+    registerNicExt(nicID);
+
+    if (drawMIR) {
+        nic->getParentModule()->getDisplayString().setTagArg("r", 0,
+                maxInterferenceDistance);
+    }
+
+    return sendDirect;
+}
+
 bool BaseConnectionManager::unregisterNic(cModule* nicModule) {
     assert(nicModule != 0);
 
@@ -399,6 +434,17 @@ void BaseConnectionManager::updateNicPos(int nicID, const Coord* newPos) {
     ItNic->second->pos = *newPos;
 
     updateConnections(nicID, &oldPos, newPos);
+}
+
+void BaseConnectionManager::updateNicPosLite(int nicID, const Coord* newPos) {
+    NicEntries::iterator ItNic = nics.find(nicID);
+    if (ItNic == nics.end())
+        error(
+                "No nic with this ID (%d) is registered with this ConnectionManager.",
+                nicID);
+
+    Coord oldPos = ItNic->second->pos;
+    ItNic->second->pos = *newPos;
 }
 
 const NicEntry::GateList& BaseConnectionManager::getGateList(int nicID) const {

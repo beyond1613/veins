@@ -155,14 +155,38 @@ void ChannelAccess::receiveSignal(cComponent *source, simsignal_t signalID,
         ChannelMobilityPtrType const mobility = check_and_cast<
                 ChannelMobilityPtrType>(obj);
         Coord pos = mobility->getCurrentPosition();
+        /*
+         if (isRegistered) {
+         cc->updateNicPos(getParentModule()->getId(), &pos);
+         } else {
+         // register the nic with ConnectionManager
+         // returns true, if sendDirect is used
+         useSendDirect = cc->registerNic(getParentModule(), this, &pos);
+         isRegistered = true;
+         }
+         */
 
-        if (isRegistered) {
-            cc->updateNicPos(getParentModule()->getId(), &pos);
+        if (this->getMobilityModule()->getCurrentHeading() == -1) {
+            coreEV << "mobilityStateChangedSignal for tail module" << endl;
+            if (isRegistered) {
+                cc->updateNicPos(getParentModule()->getId(), &pos);
+            } else {
+                // register the nic with ConnectionManager
+                // returns true, if sendDirect is used
+                useSendDirect = cc->registerNic(getParentModule(), this, &pos);
+                isRegistered = true;
+            }
         } else {
-            // register the nic with ConnectionManager
-            // returns true, if sendDirect is used
-            useSendDirect = cc->registerNic(getParentModule(), this, &pos);
-            isRegistered = true;
+            coreEV << "mobilityStateChangedSignal for head module" << endl;
+            if (isRegistered) {
+                cc->updateNicPosLite(getParentModule()->getId(), &pos);
+            } else {
+                // register the nic with ConnectionManager
+                // returns true, if sendDirect is used
+                useSendDirect = cc->registerNicLite(getParentModule(), this,
+                        &pos);
+                isRegistered = true;
+            }
         }
     }
 }
