@@ -31,7 +31,8 @@ using std::endl;
 void NicEntryDirect::connectTo(NicEntry* other) {
     cModule* otherPtr = other->nicPtr;
 
-    nicEV << "connecting nic #" << nicId << " and #" << other->nicId << endl;
+    //nicEV << "connecting nic #" << nicId << " and #" << other->nicId << endl;
+    nicEV << "connecting nic_j #" << other->nicId << " to nic_i #" << nicId << endl;
 
     cGate *radioGate = NULL;
     if ((radioGate = otherPtr->gate("radioIn")) == NULL)
@@ -41,6 +42,7 @@ void NicEntryDirect::connectTo(NicEntry* other) {
 }
 
 void NicEntryDirect::disconnectFrom(NicEntry* other) {
-    nicEV << "disconnecting nic #" << nicId << " and #" << other->nicId << endl;
+    //nicEV << "disconnecting nic #" << nicId << " and #" << other->nicId << endl;
+    nicEV << "disconnecting nic_j #" << other->nicId << " from nic_i #" << nicId << endl;
     outConns.erase(other);
 }
