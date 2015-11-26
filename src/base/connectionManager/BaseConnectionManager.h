@@ -202,6 +202,14 @@ private:
         unsigned getmaxSize() {
             return maxSize;
         }
+
+        unsigned getCurrent() {
+            return current;
+        }
+
+        void resetCurrent() {
+            current = 0;
+        }
     };
 
 protected:
