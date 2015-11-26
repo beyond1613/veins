@@ -679,10 +679,12 @@ bool BaseConnectionManager::unregisterNic(cModule* nicModule) {
             NicEntries::mapped_type other = i->second;
             if (other == nicEntry)
                 continue;
-            if (!other->isConnected(nicEntry))
-                continue;
-            other->disconnectFrom(nicEntry);
-            nicEntry->disconnectFrom(other);
+
+            if (nicEntry->isConnected(other))
+                nicEntry->disconnectFrom(other);
+
+            if (other->isConnected(nicEntry))
+                other->disconnectFrom(nicEntry);
         }
         c = gridUnion.next();
     }
