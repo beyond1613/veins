@@ -277,6 +277,8 @@ bool BaseConnectionManager::isInRange(CoordSet& gridUnionObstacle,
 
     int headlight = 1;
     int taillight = -1;
+    int maxHeadTXRange = 100;
+    int maxTailTXRange = 30;
 
     ChannelAccess* senderModule = senderNic->chAccess;
     ChannelAccess* receiverModule = receiverNic->chAccess;
@@ -317,7 +319,7 @@ bool BaseConnectionManager::isInRange(CoordSet& gridUnionObstacle,
     if (senderHeading == headlight) {
         ccEV << "senderNic #" << senderNic->nicId << " using Headlight" << endl;
         // Is it out of transmission distance?
-        if (distancefromSendertoReceiver <= 100) {
+        if (distancefromSendertoReceiver <= maxHeadTXRange) {
             // Is it out of transmission angle?
             if ((vectorfromTXtoRX * vectorTXheading) > cos(M_PI_4)) {
                 // Is it out of possible bearing?
@@ -404,7 +406,7 @@ bool BaseConnectionManager::isInRange(CoordSet& gridUnionObstacle,
     // Sender is Taillight
     else if (senderHeading == taillight) {
         ccEV << "senderNic #" << senderNic->nicId << " using Taillight" << endl;
-        if (distancefromSendertoReceiver <= 30) {
+        if (distancefromSendertoReceiver <= maxTailTXRange) {
             if ((vectorfromTXtoRX * vectorTXheading) > cos(M_PI / 3)) {
                 if ((vectorfromTXtoRX * vectorRXheading) < 0) {
                     if (!isBlocked(gridUnionObstacle, senderNic, receiverNic))
