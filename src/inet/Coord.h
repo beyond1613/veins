@@ -240,6 +240,10 @@ public:
         return Coord(this->x > a.x ? this->x : a.x,
                 this->y > a.y ? this->y : a.y, this->z > a.z ? this->z : a.z);
     }
+
+    double crossProduct(const Coord& a) const{
+        return (this->x*a.y - a.x*this->y);
+    }
 };
 
 inline std::ostream& operator<<(std::ostream& os, const Coord& coord) {
