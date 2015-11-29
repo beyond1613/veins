@@ -286,6 +286,8 @@ private:
      */
     void checkGrid(GridCoord& oldCell, GridCoord& newCell, int id);
 
+    void checkGridLite(GridCoord& oldCell, GridCoord& newCell, int id);
+
     /**
      * @brief Calculates the corresponding cell of a coordinate.
      */
@@ -350,6 +352,9 @@ protected:
      */
     virtual void updateConnections(int nicID, const Coord* oldPos,
             const Coord* newPos);
+
+    virtual void updateConnectionsLite(int nicID, const Coord* oldPos,
+                const Coord* newPos);
     /**
      * @brief Check if the two nic's are in range.
      *

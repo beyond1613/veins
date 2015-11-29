@@ -162,6 +162,14 @@ void BaseConnectionManager::updateConnections(int nicID, const Coord* oldPos,
     checkGrid(oldCell, newCell, nicID);
 }
 
+void BaseConnectionManager::updateConnectionsLite(int nicID,
+        const Coord* oldPos, const Coord* newPos) {
+    GridCoord oldCell = getCellForCoordinate(*oldPos);
+    GridCoord newCell = getCellForCoordinate(*newPos);
+
+    checkGridLite(oldCell, newCell, nicID);
+}
+
 BaseConnectionManager::NicEntries& BaseConnectionManager::getCellEntries(
         BaseConnectionManager::GridCoord& cell) {
     return nicGrid[cell.x][cell.y][cell.z];
@@ -180,10 +188,7 @@ void BaseConnectionManager::registerNicExt(int nicID) {
 }
 
 void BaseConnectionManager::checkGrid(BaseConnectionManager::GridCoord& oldCell,
-        BaseConnectionManager::GridCoord& newCell, int id)
-
-        {
-
+        BaseConnectionManager::GridCoord& newCell, int id) {
     // structure to find union of grid squares
     CoordSet gridUnion(74);
     CoordSet gridUnionVLC(74);
@@ -227,6 +232,21 @@ void BaseConnectionManager::checkGrid(BaseConnectionManager::GridCoord& oldCell,
         updateNicConnections(gridUnionVLC, gridUnionObstacle,
                 getCellEntries(*c), nic);
         c = gridUnion.next();
+    }
+}
+
+void BaseConnectionManager::checkGridLite(
+        BaseConnectionManager::GridCoord& oldCell,
+        BaseConnectionManager::GridCoord& newCell, int id) {
+    // find nic at old position
+    NicEntries& oldCellEntries = getCellEntries(oldCell);
+    NicEntries::iterator it = oldCellEntries.find(id);
+    NicEntries::mapped_type nic = it->second;
+
+    // move nic to a new position in matrix
+    if (oldCell != newCell) {
+        oldCellEntries.erase(it);
+        getCellEntries(newCell)[id] = nic;
     }
 }
 
@@ -325,9 +345,43 @@ bool BaseConnectionManager::isInRange(CoordSet& gridUnionObstacle,
                 // Is it out of possible bearing?
                 if ((vectorfromTXtoRX * vectorRXheading) < 0) {
                     // Is it blocked by vehicle(s)?
-                    if (!isBlocked(gridUnionObstacle, senderNic, receiverNic))
+                    if (!isBlocked(gridUnionObstacle, senderNic, receiverNic)) {
+                        ccEV << "TX/RX INFO : sender @ " << senderPos.info()
+                                    << ", Angle = " << 180 * senderAngle / M_PI
+                                    << ", Headlight?" << senderHeading
+                                    << "; receiver @ " << receiverPos.info()
+                                    << ", Angle = "
+                                    << 180 * receiverAngle / M_PI
+                                    << ", Headlight?" << receiverHeading
+                                    << endl;
+
+                        ccEV << "GOT RECEIVER : receverNic #"
+                                    << receiverNic->nicId << " : Distance = "
+                                    << distancefromSendertoReceiver
+                                    << ", Angle = -"
+                                    << 180
+                                            * acos(
+                                                    vectorfromTXtoRX
+                                                            * vectorTXheading)
+                                            / M_PI << " or +"
+                                    << 180
+                                            * acos(
+                                                    vectorfromTXtoRX
+                                                            * vectorTXheading)
+                                            / M_PI
+                                    << ", Bearng to vectorfromTXtoRX = -"
+                                    << 180
+                                            * acos(
+                                                    vectorfromTXtoRX
+                                                            * vectorRXheading)
+                                            / M_PI << " or +"
+                                    << 180
+                                            * acos(
+                                                    vectorfromTXtoRX
+                                                            * vectorRXheading)
+                                            / M_PI << endl;
                         return true;
-                    else {
+                    } else {
                         ccEV
                                     << "POSSIBLE RECEIVER BLOCKED BY VEHICLE(S) : receverNic #"
                                     << receiverNic->nicId << " : Distance = "
@@ -795,6 +849,8 @@ bool BaseConnectionManager::registerNicLite(cModule* nic,
 
     registerNicExt(nicID);
 
+    updateConnections(nicID, nicPos, nicPos);
+
     if (drawMIR) {
         nic->getParentModule()->getDisplayString().setTagArg("r", 0,
                 maxInterferenceDistance);
@@ -877,6 +933,8 @@ void BaseConnectionManager::updateNicPosLite(int nicID, const Coord* newPos) {
 
     Coord oldPos = ItNic->second->pos;
     ItNic->second->pos = *newPos;
+
+    updateConnectionsLite(nicID, &oldPos, newPos);
 }
 
 const NicEntry::GateList& BaseConnectionManager::getGateList(int nicID) const {
