@@ -72,6 +72,8 @@ protected:
 	/** @brief Stores the mapping defining the receiving power of the signal.*/
 	MultipliedMapping* rcvPower;
 
+	double recvPower;
+
 protected:
 	/**
 	 * @brief Deletes the rcvPower mapping member because it became
@@ -162,12 +164,17 @@ public:
 	 */
 	void setTransmissionPower(ConstMapping* power);
 
+
 	/**
 	 * @brief Sets the function representing the bitrate of the signal.
 	 *
 	 * The ownership of the passed pointer goes to the signal.
 	 */
 	void setBitrate(Mapping* bitrate);
+
+	void setRecvPower (double recvPower){
+	    this->recvPower = recvPower;
+	}
 
 	/**
 	 * @brief Adds a function representing an attenuation of the signal.
@@ -243,6 +250,10 @@ public:
 		}
 
 		return rcvPower;
+	}
+
+	double getRecvPower(){
+	    return recvPower;
 	}
 
 	/**
