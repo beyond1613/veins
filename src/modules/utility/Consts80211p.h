@@ -27,6 +27,7 @@
  */
 const double NUM_BITRATES_80211P = 8;
 const double BITRATES_80211P[] = {
+    1000000, // for VLC
 	3000000,
 	4500000,
 	6000000,
