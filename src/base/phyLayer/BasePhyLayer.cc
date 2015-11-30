@@ -205,7 +205,7 @@ void BasePhyLayer::initialize(int stage) {
         }
         headerLength = par("headerLength").longValue();
         sensitivity = par("sensitivity").doubleValue();
-        sensitivity = FWMath::dBm2mW(sensitivity);
+        //sensitivity = FWMath::dBm2mW(sensitivity);
         maxTXPower = par("maxTXPower").doubleValue();
 
         recordStats = par("recordStats").boolValue();
@@ -220,7 +220,7 @@ void BasePhyLayer::initialize(int stage) {
         }
 
         if (cc->hasPar("sat")
-                && (sensitivity - FWMath::dBm2mW(cc->par("sat").doubleValue()))
+                && (FWMath::dBm2mW(sensitivity) - FWMath::dBm2mW(cc->par("sat").doubleValue()))
                         < -0.000001) {
             opp_error("Sensitivity can't be smaller than the "
                     "signal attenuation threshold (sat) in ConnectionManager. "
