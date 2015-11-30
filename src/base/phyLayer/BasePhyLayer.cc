@@ -12,8 +12,6 @@
 
 using Veins::AirFrame;
 
-// Head Tail Model
-// y = 100m  x=-50~50m
 double headModel[100][101] = { {    -116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-77.919,-24.19,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99  },
         {   -116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-79.132,-49.275,-25.39,-47.104,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99  },
         {   -116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-88.387,-62.415,-44.261,-26.59,-39.985,-59.784,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99  },
@@ -148,7 +146,6 @@ double tailModel[30][41] = { {  -116.99,-116.99,-116.99,-116.99,-116.99,-116.99,
         {   -116.99,-116.99,-116.99,-116.99,-116.99,-112.81,-112.69,-112.55,-112.42,-112.28,-112.13,-111.98,-111.82,-111.67,-111.51,-109.37,-109.22,-109.08,-108.93,-108.79,-108.66,-108.79,-108.93,-109.08,-109.22,-109.37,-111.51,-111.67,-111.82,-111.98,-112.13,-112.28,-112.42,-112.55,-112.69,-112.81,-116.99,-116.99,-116.99,-116.99,-116.99 },
         {   -116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-112.49,-112.36,-112.22,-112.08,-111.93,-111.78,-111.63,-111.47,-109.44,-109.35,-109.27,-109.18,-109.08,-108.99,-109.08,-109.18,-109.27,-109.35,-109.44,-111.47,-111.63,-111.78,-111.93,-112.08,-112.22,-112.36,-112.49,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99 }
  };
-
 //introduce BasePhyLayer as module to OMNet
 Define_Module(BasePhyLayer);
 
@@ -241,7 +238,6 @@ void BasePhyLayer::initialize(int stage) {
         radioSwitchingOverTimer = new cMessage("radio switching over",
                 RADIO_SWITCHING_OVER);
         txOverTimer = new cMessage("transmission over", TX_OVER);
-
     }
 }
 
@@ -546,7 +542,6 @@ void BasePhyLayer::handleAirFrameStartReceive(AirFrame* frame) {
     //emptyAnalogueModels = -1;
     //sameVehicle = 1;
     //NLOSLink = 2;
-
     int flag = filterSignal(frame);
     if (flag) {
         switch (flag) {
@@ -827,7 +822,7 @@ int BasePhyLayer::filterSignal(AirFrame *frame) {
     ChannelMobilityPtrType receiverMobility =
             receiverModule ? receiverModule->getMobilityModule() : NULL;
 
-    const Coord sendersPos =
+    const Coord senderPos =
             sendersMobility ?
                     sendersMobility->getCurrentPosition(/*sStart*/) :
                     NoMobiltyPos;
@@ -835,12 +830,109 @@ int BasePhyLayer::filterSignal(AirFrame *frame) {
             receiverMobility ?
                     receiverMobility->getCurrentPosition(/*sStart*/) :
                     NoMobiltyPos;
+
+    double distancefromSendertoReceiver = senderPos.distance(receiverPos);
+
+    // Angle
+    double senderAngle = senderModule->getMobilityModule()->getCurrentAngle();
+    double receiverAngle =
+            receiverModule->getMobilityModule()->getCurrentAngle();
+
+    // Heading
+    int senderHeading = senderModule->getMobilityModule()->getCurrentHeading();
+    int receiverHeading =
+            receiverModule->getMobilityModule()->getCurrentHeading();
+
+    // Normalized Vector
+    Coord vectorfromTXtoRX = (receiverPos - senderPos)
+            / distancefromSendertoReceiver;
+    Coord vectorTXheading = Coord(cos(senderAngle), sin(senderAngle))
+            * senderHeading;
+    Coord vectorRXheading = Coord(cos(receiverAngle), sin(receiverAngle))
+            * receiverHeading;
+
+    coreEV << "## sender @ " << senderPos.info() << ", Angle = "
+                  << 180 * senderAngle / M_PI << "Headlight?" << senderHeading
+                  << "; receiver @ " << receiverPos.info() << ", Angle = "
+                  << 180 * receiverAngle / M_PI << "Headlight?"
+                  << receiverHeading << endl;
+    coreEV << "## DistancefromSendertoReceiver = "
+                  << distancefromSendertoReceiver << ", vectorfromTXtoRX = "
+                  << vectorfromTXtoRX.info() << ", vectorTXheading = "
+                  << vectorTXheading.info() << ", vectorRXheading = "
+                  << vectorRXheading.info() << endl;
+
+    // RX located at Left or Right of TX ; for headModel not tailModel(Asymmetric)
+    bool onLeftofTX =
+            (vectorTXheading.crossProduct(vectorfromTXtoRX) >= 0) ?
+                    true : false;
+    coreEV << "## receiver on the left of sender? " << onLeftofTX << endl;
+
+    // cos(emission angle) = cos(incidence angle without considering bearing)
+    double cosEmissionAngle = vectorfromTXtoRX * vectorTXheading;
+    coreEV << "## cosEmissionAngle = " << cosEmissionAngle
+                  << "; emissionAngle = " << 180 * acos(cosEmissionAngle) / M_PI
+                  << endl;
+
+    double emissionAngle = acos(cosEmissionAngle);
+
+    // cos(incidence angle)
+    double cosIncidenceAngle = vectorfromTXtoRX * vectorRXheading * (-1);
+    coreEV << "## cosIncidenceAngle = " << cosIncidenceAngle
+                  << "; incidenceAngle = "
+                  << 180 * acos(cosIncidenceAngle) / M_PI << endl;
+
+    // relative x,y of RX to TX
+    int relativeXaxis =
+            onLeftofTX ?
+                    (-1) * distancefromSendertoReceiver * sin(emissionAngle) :
+                    distancefromSendertoReceiver * sin(emissionAngle);
+    int relativeYaxis = distancefromSendertoReceiver * cos(emissionAngle);
+    coreEV << "## relative (x,y) of receiver to sender is (" << relativeXaxis
+                  << ", " << relativeYaxis << ")" << endl;
+
+    // recvPowertmp
+    double tmpRecvPower;
+    if (senderHeading == 1 && abs(relativeXaxis) > 50) {
+        tmpRecvPower = -114;
+        coreEV
+                      << "## abs (relavtive x-axis) > 50(m), x-axis out of -50 ~ 50 is unreachable (Headlight)."
+                      << endl;
+    } else if (senderHeading == -1 && abs(relativeXaxis) > 20) {
+        tmpRecvPower = -114;
+        coreEV
+                      << "## abs (relavtive x-axis) > 20(m), x-axis out of -20 ~ 20 is unreachable to (Taillight)."
+                      << endl;
+    } else {
+        tmpRecvPower =
+                (senderHeading == 1) ?
+                        headModel[relativeYaxis - 1][relativeXaxis + 50] :
+                        tailModel[relativeYaxis - 1][relativeXaxis + 20];
+    }
+    coreEV << "## senderheading = " << senderHeading << "; tmpRecvPower = "
+                  << tmpRecvPower << endl;
+
+    // recvPower
+    double recvPower =
+            (log10(
+                    (pow(10, tmpRecvPower / 10) / cosEmissionAngle)
+                            * cosIncidenceAngle)) * 10;
+    coreEV << "## recvPower after considering bearing = " << recvPower
+                  << "(dBm)" << endl;
+
+    // set the recvPower of the Signal
+    Signal& signal = frame->getSignal();
+    if (recvPower < -114)
+        signal.setRecvPower(-114);
+    else
+        signal.setRecvPower(recvPower);
+
     /*
      * Description : Decide whether sender and receiver are mounted on the same vehicles?  ex flow0.0 , flow0.0-2
      * Date : 2015-10-16
      * Author : Will Tseng
      */
-    if (sendersPos == receiverPos)
+    if (senderPos == receiverPos)
         return 1;
 
     if (analogueModels.empty())
@@ -848,7 +940,7 @@ int BasePhyLayer::filterSignal(AirFrame *frame) {
 
     for (AnalogueModelList::const_iterator it = analogueModels.begin();
             it != analogueModels.end(); it++) {
-        if(((*it)->filterSignal(frame, sendersPos, receiverPos)))
+        if (((*it)->filterSignal(frame, senderPos, receiverPos)))
             return 2;
     }
     return 0;
