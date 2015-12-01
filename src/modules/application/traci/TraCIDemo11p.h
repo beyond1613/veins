@@ -39,11 +39,11 @@ protected:
     TraCIMobility* traci;
     AnnotationManager* annotations;
     simtime_t lastDroveAt;
-    simtime_t lastTransmitAt;
     bool sentMessage;
     bool isParking;
     bool sendWhileParking;
     static const simsignalwrap_t parkingStateChangedSignal;
+    simtime_t whenToStartTransmission;
 protected:
     virtual void onBeacon(WaveShortMessage* wsm);
     virtual void onData(WaveShortMessage* wsm);

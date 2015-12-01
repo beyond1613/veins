@@ -37,10 +37,10 @@ void TraCIDemo11p::initialize(int stage) {
 
         sentMessage = false;
         lastDroveAt = simTime();
-        lastTransmitAt = simTime();
         findHost()->subscribe(parkingStateChangedSignal, this);
         isParking = false;
         sendWhileParking = par("sendWhileParking").boolValue();
+        whenToStartTransmission = par("whenToStartTransmission");
     }
 }
 
@@ -98,14 +98,9 @@ void TraCIDemo11p::handleParkingUpdate(cObject* obj) {
 void TraCIDemo11p::handlePositionUpdate(cObject* obj) {
     BaseWaveApplLayer::handlePositionUpdate(obj);
 
-    int pktNum = 0;
-    // Periodically transmit packet  10 packets within 1(s)
-    if (simTime() > 20 & (simTime() - lastTransmitAt > 0.1)) {
-        while (pktNum < 10) {
-            sendMessage(traci->getRoadId());
-            pktNum++;
-        }
-        lastTransmitAt = simTime();
+    // Appl. Packet Arrival Rate = 10Hz = freq. to update Position
+    if (simTime() > whenToStartTransmission) {
+        sendMessage(traci->getRoadId());
     }
 
     /*
