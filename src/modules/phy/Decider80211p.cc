@@ -209,6 +209,10 @@ Mapping* Decider80211p::calculateNoiseRSSIMapping(simtime_t_cref start,
 
 }
 
+double Decider80211p::calculateSnr(AirFrame *exclude) {
+    return (exclude->getSignal().getRecvPower() - sensitivity);
+}
+
 DeciderResult* Decider80211p::checkIfSignalOk(AirFrame* frame) {
 
     Mapping* sinrMap = 0;

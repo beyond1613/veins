@@ -155,6 +155,8 @@ class Decider80211p: public BaseDecider {
 		 */
 		Mapping* calculateNoiseRSSIMapping(simtime_t_cref start, simtime_t_cref end, AirFrame *frame);
 
+		double calculateSnr(AirFrame *frame);
+
 	public:
 
 		/**
