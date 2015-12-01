@@ -46,9 +46,12 @@ simtime_t Decider80211p::processNewSignal(AirFrame* msg) {
 
     signalStates[frame] = EXPECT_END;
 
-    double recvPower = signal.getReceivingPower()->getValue(start);
+    //double recvPower = signal.getReceivingPower()->getValue(start);
+    double recvPower = signal.getRecvPower();
+    DBG_D11P << "recvPower = signal.getReceivingPower()->getValue(start) = "
+                    << recvPower << endl;
 
-    if (recvPower < sensitivity) {
+    if (recvPower <= sensitivity) {
         //annotate the frame, so that we won't try decoding it at its end
         frame->setUnderSensitivity(true);
 
@@ -643,7 +646,8 @@ simtime_t Decider80211p::processSignalEnd(AirFrame* msg) {
         if (frame == curSyncFrame) {
             // check if the snrMapping is above the Decider's specific threshold,
             // i.e. the Decider has received it correctly
-            result = checkIfSignalOk(frame);
+            result = checkIfSignalOkVLC(frame);
+            //TODO: result = checkIfSignalOkVLC(frame);
 
             //after having tried to decode the frame, the NIC is no more synced to the frame
             //and it is ready for syncing on a new one
