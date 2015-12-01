@@ -103,6 +103,8 @@ class Decider80211p: public BaseDecider {
 		 */
 		virtual DeciderResult* checkIfSignalOk(AirFrame* frame);
 
+		virtual DeciderResult* checkIfSignalOkVLC(AirFrame* frame);
+
 		virtual simtime_t processNewSignal(AirFrame* frame);
 
 		/**

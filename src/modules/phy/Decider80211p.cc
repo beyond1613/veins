@@ -256,6 +256,11 @@ DeciderResult* Decider80211p::checkIfSignalOk(AirFrame* frame) {
 
     DeciderResult80211* result = 0;
 
+    DBG_D11P << "(snirMin, snrMin, frame->getBitLength(), payloadBitrate) = ("
+                    << snirMin << ", " << snrMin << ", "
+                    << frame->getBitLength() << ", " << payloadBitrate << ")"
+                    << endl;
+
     switch (packetOk(snirMin, snrMin, frame->getBitLength(), payloadBitrate)) {
 
     case DECODED:
@@ -290,6 +295,67 @@ DeciderResult* Decider80211p::checkIfSignalOk(AirFrame* frame) {
     delete sinrMap;
     if (snrMap)
         delete snrMap;
+    return result;
+}
+
+DeciderResult* Decider80211p::checkIfSignalOkVLC(AirFrame* frame) {
+    Signal& s = frame->getSignal();
+    simtime_t start = s.getReceptionStart();
+    simtime_t end = s.getReceptionEnd();
+
+    double snir = calculateSinr(start, end, frame);
+    double snr;
+    if (collectCollisionStats) {
+        snr = calculateSnr(frame);
+    } else {
+        //just set to any value. if collectCollisionStats != true
+        //it will be ignored by packetOk
+        snr = -1;
+    }
+
+    ConstMappingIterator* bitrateIt = s.getBitrate()->createConstIterator();
+    bitrateIt->next(); //iterate to payload bitrate indicator
+    double payloadBitrate = bitrateIt->getValue();
+    delete bitrateIt;
+
+    DeciderResult80211* result = 0;
+
+    DBG_D11P << "(snir, snr, frame->getBitLength(), payloadBitrate) = ("
+                    << snir << ", " << snr << ", "
+                    << frame->getBitLength() << ", " << payloadBitrate << ")"
+                    << endl;
+
+    switch (packetOkVLC(snir, snr, frame->getBitLength(), payloadBitrate)) {
+
+    case DECODED:
+        DBG_D11P << "Packet is fine! We can decode it" << std::endl;
+        result = new DeciderResult80211(true, payloadBitrate, snir);
+        break;
+
+    case NOT_DECODED:
+        if (!collectCollisionStats) {
+            DBG_D11P << "Packet has bit Errors. Lost " << std::endl;
+        } else {
+            DBG_D11P << "Packet has bit Errors due to low power. Lost "
+                            << std::endl;
+        }
+        result = new DeciderResult80211(false, payloadBitrate, snir);
+        break;
+
+    case COLLISION:
+        DBG_D11P << "Packet has bit Errors due to collision. Lost "
+                        << std::endl;
+        collisions++;
+        result = new DeciderResult80211(false, payloadBitrate, snir);
+        break;
+
+    default:
+        ASSERT2(false,
+                "Impossible packet result returned by packetOk(). Check the code.");
+        break;
+
+    }
+
     return result;
 }
 
