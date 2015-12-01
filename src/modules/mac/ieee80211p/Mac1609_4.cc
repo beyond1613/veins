@@ -874,8 +874,10 @@ void Mac1609_4::setParametersForBitrate(int bitrate) {
 
 simtime_t Mac1609_4::getFrameDuration(int payloadLengthBits) const {
     // calculate frame duration according to Equation (17-29) of the IEEE 802.11-2007 standard
+    // simtime_t duration = PHY_HDR_PREAMBLE_DURATION + PHY_HDR_PLCPSIGNAL_DURATION
+    //        + T_SYM_80211P * ceil((16 + payloadLengthBits + 6) / (n_dbps));
     simtime_t duration = PHY_HDR_PREAMBLE_DURATION + PHY_HDR_PLCPSIGNAL_DURATION
-            + T_SYM_80211P * ceil((16 + payloadLengthBits + 6) / (n_dbps));
+            + T_SYM_80211P * ceil(payloadLengthBits / (n_dbps)); // for VLC
 
     return duration;
 }
