@@ -58,14 +58,16 @@ const double N_DBPS_80211P[] = {
  *
  * as defined in Table 17-4 in the IEEE 802.11-2007 standard
  */
-const double T_SYM_80211P = 8e-6;
+//const double T_SYM_80211P = 8e-6;
+const double T_SYM_80211P = 1e-6; // for VLC
 
 
 /** @brief Length of PHY HEADER
  *
  * as defined in 17.3.2 PLCP frame format in the IEEE 802.11-2007 standard
  * 40bit header + 6 bit tail */
-const int PHY_HDR_TOTAL_LENGTH = 46;
+//const int PHY_HDR_TOTAL_LENGTH = 46;
+const int PHY_HDR_TOTAL_LENGTH = 16; // for VLC
 
 /** @brief Duration of the PLCP Preamble
  *
@@ -77,13 +79,15 @@ const double PHY_HDR_PREAMBLE_DURATION = 32e-6;
  *
  * as defined in Table 17.4 Timing-related parameters in the IEEE 802.11-2007 standard
  */
-const double PHY_HDR_PLCPSIGNAL_DURATION = 8e-6;
+//const double PHY_HDR_PLCPSIGNAL_DURATION = 8e-6;
+const double PHY_HDR_PLCPSIGNAL_DURATION = 16e-6; // for VLC
 
 /** @brief Length of the PLCP Signal
  *
  * as defined in Figure 17.1 PPDU frame format in the IEEE 802.11-2007 standard
  */
-const int PHY_HDR_PLCPSIGNAL_LENGTH = 24;
+//const int PHY_HDR_PLCPSIGNAL_LENGTH = 24;
+const int PHY_HDR_PLCPSIGNAL_LENGTH = 16; // for VLC
 
 /** @brief Lenght of the PhyHeader sent with normal bitrate
  *
@@ -95,7 +99,8 @@ const int PHY_HDR_PSDU_HEADER_LENGTH = PHY_HDR_TOTAL_LENGTH - PHY_HDR_PLCPSIGNAL
  * as defined in Table 17.4 Timing-related parameters in the IEEE 802.11-2007 standard
  * 24 bits in 8e-6 seconds
  */
-const double PHY_HDR_BANDWIDTH = 3000000;
+//const double PHY_HDR_BANDWIDTH = 3000000;
+const double PHY_HDR_BANDWIDTH = 1e6; // VLC : 16bit in 16e-6
 
 /** @brief Slot Time for 10 MHz channel spacing
  *
