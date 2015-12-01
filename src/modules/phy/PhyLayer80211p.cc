@@ -478,6 +478,8 @@ AirFrame *PhyLayer80211p::encapsMsg(cPacket *macPkt) {
     frame->setId(world->getUniqueAirFrameId());
     frame->setChannel(radio->getCurrentChannel());
 
+    coreEV << "HeaderLength = " << headerLength << endl;
+
     // pointer and Signal not needed anymore
     delete s;
     s = 0;

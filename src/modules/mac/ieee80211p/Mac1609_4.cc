@@ -176,6 +176,9 @@ void Mac1609_4::handleSelfMsg(cMessage* msg) {
         WaveShortMessage* pktToSend = myEDCA[activeChannel]->initiateTransmit(
                 lastIdle);
 
+        DBG_MAC << "pktToSend->getWsmLength() = " << pktToSend->getWsmLength()
+                       << endl;
+
         lastAC = mapPriority(pktToSend->getPriority());
 
         DBG_MAC << "MacEvent received. Trying to send packet with priority"
@@ -189,6 +192,9 @@ void Mac1609_4::handleSelfMsg(cMessage* msg) {
         mac->encapsulate(pktToSend->dup());
 
         simtime_t sendingDuration = getFrameDuration(mac->getBitLength());
+
+        DBG_MAC << "mac->getBitLength(packet length in bits) = "
+                       << mac->getBitLength() << endl;
 
         //simtime_t sendingDuration = RADIODELAY_11P + getFrameDuration(mac->getBitLength());
 

@@ -64,6 +64,8 @@ WaveShortMessage*  BaseWaveApplLayer::prepareWSM(std::string name, int lengthBit
 	wsm->addBitLength(headerLength);
 	wsm->addBitLength(lengthBits);
 
+	DBG << "wsm's headerLength = " << headerLength << ", wsm's lenthBits = " << lengthBits << endl;
+
 	switch (channel) {
 		case type_SCH: wsm->setChannelNumber(Channels::SCH1); break; //will be rewritten at Mac1609_4 to actual Service Channel. This is just so no controlInfo is needed
 		case type_CCH: wsm->setChannelNumber(Channels::CCH); break;
