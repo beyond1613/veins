@@ -43,6 +43,7 @@ const double BITRATES_80211P[] = {
  * as defined in Table 17-3 in the IEEE 802.11-2007 standard
  */
 const double N_DBPS_80211P[] = {
+    1, // for VLC
 	24,
 	36,
 	48,
