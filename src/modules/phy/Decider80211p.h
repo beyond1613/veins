@@ -121,6 +121,8 @@ class Decider80211p: public BaseDecider {
 		/** @brief computes if packet is ok or has errors*/
 		enum PACKET_OK_RESULT packetOk(double snirMin, double snrMin, int lengthMPDU, double bitrate);
 
+		enum PACKET_OK_RESULT packetOkVLC(double snir, double snr, int lengthMPDU, double bitrate);
+
 		/**
 		 * @brief Calculates the RSSI value for the passed ChannelSenseRequest.
 		 *

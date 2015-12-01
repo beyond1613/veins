@@ -380,6 +380,8 @@ enum Decider80211p::PACKET_OK_RESULT Decider80211p::packetOk(double snirMin,
                 "Currently this 11p-Model only provides accurate BER models for 6Mbit and 18Mbit. Please use one of these frequencies for now.");
     }
 
+    DBG_D11P << "packetOkSinr = " << packetOkSinr << endl;
+
     //check if header is broken, BER model for PSK taken from MiXiM 2.2
     double berHeader = 0.5 * exp(-snirMin * 10E+6 / PHY_HDR_BANDWIDTH);
     double headerNoError = pow(1.0 - berHeader, PHY_HDR_PLCPSIGNAL_LENGTH);
@@ -406,6 +408,8 @@ enum Decider80211p::PACKET_OK_RESULT Decider80211p::packetOk(double snirMin,
         assert(headerNoErrorSnr >= headerNoError);
 
     }
+
+    DBG_D11P << "packetOkSnr = " << packetOkSnr << endl;
 
     //probability of no bit error in the PLCP header
 
@@ -434,6 +438,87 @@ enum Decider80211p::PACKET_OK_RESULT Decider80211p::packetOk(double snirMin,
     //probability of no bit error in the rest of the packet
 
     rand = dblrand();
+
+    if (!collectCollisionStats) {
+        if (rand > packetOkSinr) {
+            return NOT_DECODED;
+        } else {
+            return DECODED;
+        }
+    } else {
+
+        if (rand > packetOkSinr) {
+            //ups, we have an error in the payload. is that due to interference?
+            if (rand > packetOkSnr) {
+                //no. we would have not been able to receive that even
+                //without interference
+                return NOT_DECODED;
+            } else {
+                //yes. we would have decoded that without interference
+                return COLLISION;
+            }
+
+        } else {
+            return DECODED;
+        }
+
+    }
+}
+
+enum Decider80211p::PACKET_OK_RESULT Decider80211p::packetOkVLC(double snir,
+        double snr, int lengthMPDU, double bitrate) {
+    //the lengthMPDU includes the PHY_SIGNAL_LENGTH + PHY_PSDU_HEADER + Payload, while the first is sent with PHY_HEADER_BANDWIDTH
+    double ber;
+    double packetOkSinr;
+    double headerNoError;
+
+    double snir_linear = pow(10,(snir/10));
+    double snr_linear = pow(10,(snr/10));
+
+    ber = 0.5 * erfc( (sqrt(snir_linear)) / ( 2 * (sqrt(2)) ) );
+    packetOkSinr = pow(1.0 - ber, lengthMPDU - PHY_HDR_PLCPSIGNAL_LENGTH);
+    headerNoError = pow(1.0 - ber, PHY_HDR_PLCPSIGNAL_LENGTH);
+    DBG_D11P << "ber = " << ber << ", packetOkSinr = " << packetOkSinr << ", headerNoError = " << headerNoError << endl;
+
+    double packetOkSnr;
+    double headerNoErrorSnr;
+    //compute PER also for SNR only
+    if (collectCollisionStats) {
+        ber = 0.5 * erfc( (sqrt(snr_linear)) / ( 2 * (sqrt(2)) ) );
+        packetOkSnr = pow(1.0 - ber, lengthMPDU - PHY_HDR_PLCPSIGNAL_LENGTH);
+        headerNoErrorSnr = pow(1.0 - ber, PHY_HDR_PLCPSIGNAL_LENGTH);
+        DBG_D11P << "ber = " << ber << ", packetOkSnr = " << packetOkSnr << ", headerNoErrorSnr = " << headerNoErrorSnr << endl;
+    }
+
+    //probability of no bit error in the PLCP header
+
+    double rand = dblrand();
+    DBG_D11P << "HEADER : rand = " << rand << endl;
+
+    if (!collectCollisionStats) {
+        if (rand > headerNoError)
+            return NOT_DECODED;
+    } else {
+
+        if (rand > headerNoError) {
+            //ups, we have a header error. is that due to interference?
+            if (rand > headerNoErrorSnr) {
+                //no. we would have not been able to receive that even
+                //without interference
+                return NOT_DECODED;
+            } else {
+                //yes. we would have decoded that without interference
+                return COLLISION;
+            }
+
+        }
+
+    }
+
+    //probability of no bit error in the rest of the packet
+
+    rand = dblrand();
+    DBG_D11P << "PACKET : rand = " << rand << endl;
 
     if (!collectCollisionStats) {
         if (rand > packetOkSinr) {
