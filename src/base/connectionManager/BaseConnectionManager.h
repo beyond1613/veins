@@ -431,6 +431,8 @@ public:
     /** @brief Returns the ingates of all nics in range*/
     const NicEntry::GateList& getGateList(int nicID) const;
 
+    bool isAsymmetry(int nic_txID, int nic_rxID) const;
+
     /** @brief Returns the ingate of the with id==targetID, or 0 if not in range*/
     const cGate* getOutGateTo(const NicEntry* nic,
             const NicEntry* targetNic) const;

@@ -953,6 +953,16 @@ const NicEntry::GateList& BaseConnectionManager::getGateList(int nicID) const {
     return ItNic->second->getGateList();
 }
 
+bool BaseConnectionManager::isAsymmetry(int nic_txID, int nic_rxID) const {
+    NicEntries::const_iterator ItNicTX = nics.find(nic_txID);
+    NicEntries::const_iterator ItNicRX = nics.find(nic_rxID);
+
+    NicEntries::mapped_type nic_tx = ItNicTX->second;
+    NicEntries::mapped_type nic_rx = ItNicRX->second;
+
+    return !(nic_rx->isConnected(nic_tx));
+}
+
 const cGate* BaseConnectionManager::getOutGateTo(const NicEntry* nic,
         const NicEntry* targetNic) const {
     NicEntries::const_iterator ItNic = nics.find(nic->nicId);
