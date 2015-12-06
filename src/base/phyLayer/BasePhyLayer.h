@@ -110,6 +110,8 @@ protected:
 	 */
 	ChannelInfo channelInfo;
 
+	ChannelInfo channelInfoBusyTone;
+
 	/** @brief The state machine storing the current radio state (TX, RX, SLEEP).*/
 	Radio* radio;
 
@@ -472,6 +474,8 @@ public:
 	 * with the time interval [from, to]
 	 */
 	virtual void getChannelInfo(simtime_t_cref from, simtime_t_cref to, AirFrameVector& out);
+
+	virtual void getChannelInfoBusyTone(simtime_t_cref from, simtime_t_cref to, AirFrameVector& out);
 
 	/**
 	 * @brief Returns a Mapping which defines the thermal noise in

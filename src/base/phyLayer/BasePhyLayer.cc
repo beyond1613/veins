@@ -1091,6 +1091,11 @@ void BasePhyLayer::getChannelInfo(simtime_t_cref from, simtime_t_cref to,
     channelInfo.getAirFrames(from, to, out);
 }
 
+void BasePhyLayer::getChannelInfoBusyTone(simtime_t_cref from,
+        simtime_t_cref to, AirFrameVector& out) {
+    channelInfoBusyTone.getAirFrames(from, to, out);
+}
+
 ConstMapping* BasePhyLayer::getThermalNoise(simtime_t_cref from,
         simtime_t_cref to) {
     if (thermalNoise)
