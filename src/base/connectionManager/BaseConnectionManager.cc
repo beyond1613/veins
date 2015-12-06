@@ -72,10 +72,10 @@ void BaseConnectionManager::initialize(int stage) {
         maxInterferenceDistance = 100;
         maxDistSquared = maxInterferenceDistance * maxInterferenceDistance;
 
-        double maxHeadTXDistance = par("maxHeadTXDistance").doubleValue();
-        double maxTailTXDistance = par("maxTailTXDistance").doubleValue();
-        double maxHeadTXAngle = par("maxHeadTXAngle").doubleValue(); //degree
-        double maxTailTXAngle = par("maxTailTXAngle").doubleValue(); //degree
+        maxHeadTXDistance = par("maxHeadTXDistance").doubleValue();
+        maxTailTXDistance = par("maxTailTXDistance").doubleValue();
+        maxHeadTXAngle = par("maxHeadTXAngle").doubleValue(); //degree
+        maxTailTXAngle = par("maxTailTXAngle").doubleValue(); //degree
 
         maxHeadTXAngle = M_PI*(maxHeadTXAngle/180); // rad
         maxTailTXAngle = M_PI*(maxTailTXAngle/180); // rad
