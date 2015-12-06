@@ -33,6 +33,11 @@
 #include "BaseWorldUtility.h"
 #include "BaseConnectionManager.h"
 
+// for Hello Message
+#include "NicEntryDebug.h"
+#include "NicEntryDirect.h"
+#include <AirFrame_m.h>
+
 using std::endl;
 
 const simsignalwrap_t ChannelAccess::mobilityStateChangedSignal =
@@ -75,11 +80,28 @@ void ChannelAccess::sendToChannel(cPacket *msg) {
             getParentModule()->getId());
     NicEntry::GateList::const_iterator i = gateList.begin();
 
+    AirFrame* airframe = static_cast<AirFrame*>(msg);
+
     if (useSendDirect) {
         // use Andras stuff
         if (i != gateList.end()) {
             simtime_t delay = SIMTIME_ZERO;
             for (; i != --gateList.end(); ++i) {
+
+                // nic->rx = i->first : nic_tx -> nic_rx must exist
+                // and isAsymmetry(nic_txID, nic_rxID) tell us nic->rx -> nic_tx exist or not
+                // if not, isAsymmetry will return true
+                bool asymmetry = cc->isAsymmetry(getParentModule()->getId(), i->first->nicId);
+
+                if(asymmetry){
+                    coreEV << "nic_rx doesn't connect to nic_tx --> Asymmetry happen." << endl;
+                    airframe->setIsAsymmetry(true);
+                }
+                else {
+                    coreEV << "nic_tx <-> nic_rx --> Symmetry" << endl;
+                    airframe->setIsAsymmetry(false);
+                }
+
                 //calculate delay (Propagation) to this receiving nic
                 delay = calculatePropagationDelay(i->first);
 
