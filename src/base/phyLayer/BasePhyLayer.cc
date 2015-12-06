@@ -10,6 +10,10 @@
 #include "BaseWorldUtility.h"
 #include "BaseConnectionManager.h"
 
+// for Broadcast BusyTone
+#include <Consts80211p.h>
+#include <AirFrame11p_m.h>
+
 using Veins::AirFrame;
 
 double headModel[100][101] = { {    -116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-77.919,-24.19,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99,-116.99  },
@@ -157,7 +161,8 @@ Coord NoMobiltyPos = Coord::ZERO;
 
 BasePhyLayer::BasePhyLayer() :
         protocolId(GENERIC), thermalNoise(0), radio(0), decider(0), radioSwitchingOverTimer(
-                0), txOverTimer(0), headerLength(-1), world(NULL) {
+                0), txOverTimer(0), headerLength(-1), enableBusyTone(false), world(
+        NULL) {
 }
 
 template<class T> T BasePhyLayer::readPar(const char* parName,
@@ -215,12 +220,15 @@ void BasePhyLayer::initialize(int stage) {
 
         // get pointer to the world module
         world = FindModule<BaseWorldUtility*>::findGlobalModule();
+
+        enableBusyTone = par("enableBusyTone").boolValue();
         if (world == NULL) {
             opp_error("Could not find BaseWorldUtility module");
         }
 
         if (cc->hasPar("sat")
-                && (FWMath::dBm2mW(sensitivity) - FWMath::dBm2mW(cc->par("sat").doubleValue()))
+                && (FWMath::dBm2mW(sensitivity)
+                        - FWMath::dBm2mW(cc->par("sat").doubleValue()))
                         < -0.000001) {
             opp_error("Sensitivity can't be smaller than the "
                     "signal attenuation threshold (sat) in ConnectionManager. "
@@ -709,6 +717,75 @@ void BasePhyLayer::handleAirFrameReceiving(AirFrame* frame) {
 
     sendSelfMessage(frame, nextHandleTime);
 
+    // Broadcast Busytone
+    if (enableBusyTone) {
+        coreEV << "Broadcast busytone ..." << endl;
+
+        // Parameter
+        double power = 20; //mW
+        double bitrate = 1e6;
+        double frequency = 1e6;
+        double n_dbps = 1;
+        int payloadLengthBits = 64; // one car license number
+        simtime_t duration = PHY_HDR_PREAMBLE_DURATION
+                + PHY_HDR_PLCPSIGNAL_DURATION
+                + T_SYM_80211P * ceil(payloadLengthBits / (n_dbps)); // 112 us
+
+                // Signal
+        Signal* s = createSignal(simTime(), duration, 20, 1e6, 1e6);
+
+        // Airframe : do what encapsMsg() do
+        const char *name = "BusyTone";
+        AirFrame11p* busytone = new AirFrame11p(name, BUSY_TONE);
+        busytone->setSignal(*s);
+        busytone->setDuration(s->getDuration());
+
+        busytone->setSchedulingPriority(airFramePriority);
+        busytone->setProtocolId(myProtocolId());
+        busytone->setBitLength(headerLength);
+        busytone->setId(world->getUniqueAirFrameId());
+        busytone->setChannel(radio->getCurrentChannel());
+
+        // tell RX of BusyTone when I will finishe processing Airframe
+        busytone->setBusytone_endtime(nextHandleTime);
+
+        coreEV << "s.getSendingStart() = " << s->getSendingStart()
+                      << ", s.getDuration = " << s->getDuration() << endl;
+        coreEV << "busytone->getDuration = " << busytone->getDuration()
+                      << ", busytone->getBusytone_endtime = "
+                      << busytone->getBusytone_endtime()
+                      << ", busy->getBitLength = " << busytone->getBitLength()
+                      << endl;
+
+        // BusyTone is Ready
+        sendMessageDown(busytone);
+    }
+}
+
+Signal* BasePhyLayer::createSignal(simtime_t start, simtime_t length,
+        double power, double bitrate, double frequency) {
+    simtime_t end = start + length;
+    //create signal with start at current simtime and passed length
+    Signal* s = new Signal(start, length);
+
+    //create and set tx power mapping
+    //ConstMapping* txPowerMapping = createSingleFrequencyMapping(start, end,
+    //       frequency, 5.0e6, power);
+    //s->setTransmissionPower(txPowerMapping);
+    s->setTransmissionPower(0);
+
+    Mapping* bitrateMapping = MappingUtils::createMapping(
+            DimensionSet::timeDomain, Mapping::STEPS);
+
+    Argument pos(start);
+    bitrateMapping->setValue(pos, bitrate);
+
+    pos.setTime(16 / bitrate);
+    bitrateMapping->setValue(pos, bitrate);
+
+    s->setBitrate(bitrateMapping);
+
+    return s;
 }
 
 void BasePhyLayer::handleBusyToneReceiving(AirFrame* frame) {
@@ -1090,11 +1167,15 @@ int BasePhyLayer::filterSignal(AirFrame *frame) {
     if (analogueModels.empty())
         return -1;
 
-    for (AnalogueModelList::const_iterator it = analogueModels.begin();
-            it != analogueModels.end(); it++) {
-        if (((*it)->filterSignal(frame, senderPos, receiverPos)))
-            return 2;
-    }
+    /*
+     // NOTICE_BUSYTONE : TODO  DISABLE FOR BUSYTONE
+     for (AnalogueModelList::const_iterator it = analogueModels.begin();
+     it != analogueModels.end(); it++) {
+     if (((*it)->filterSignal(frame, senderPos, receiverPos)))
+     return 2;
+     }
+     */
+
     return 0;
 }
 

@@ -167,6 +167,8 @@ protected:
 	/** @brief Pointer to the World Utility, to obtain some global information*/
 	BaseWorldUtility* world;
 
+	bool enableBusyTone;
+
 public:
 
 
@@ -331,6 +333,9 @@ protected:
 	virtual void handleBusyToneEndReceive(AirFrame* msg);
 
 	/*@}*/
+
+    virtual Signal* createSignal(simtime_t start, simtime_t length, double power,
+            double bitrate, double frequency);
 
 	/**
 	 * @name Send Messages

@@ -37,6 +37,8 @@ simple BasePhyLayer like IWirelessPhy
 
         int nbRadioChannels = default(1);  // Number of available radio channels. Defaults to single channel radio.
 		int initialRadioChannel = default(0);  // Initial radio channel.
+		
+		bool enableBusyTone ; // Should transmit busytone when processing signal
 
     gates:
         input upperLayerIn; 	// from the MAC layer
