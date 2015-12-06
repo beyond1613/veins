@@ -801,7 +801,8 @@ void Mac1609_4::channelBusy() {
 
     //the channel turned busy because someone else is sending
     idleChannel = false;
-    DBG_MAC << "Channel turned busy: External sender" << std::endl;
+    //DBG_MAC << "Channel turned busy: External sender" << std::endl;
+    DBG_MAC << "Channel turned busy: External sender's BusyTone" << std::endl;
     lastBusy = simTime();
 
     //channel turned busy
