@@ -34,6 +34,8 @@ packet AirFrame
     Signal signal;		// Contains the physical data of this AirFrame
 
     simtime_t duration;	// time the AirFrames takes to be transmited (without propagation delay)
+    
+    simtime_t busytone_endtime; // time when TX of Busytone finished processing received Airframe
 
     int state = 1; 		// state of the AirFrames, used by the physical layer
         					// as state machine for delay and transmission duration
