@@ -514,6 +514,26 @@ void BasePhyLayer::handleAirFrame(AirFrame* frame) {
     }
 }
 
+void BasePhyLayer::handleBusyTone(AirFrame* frame) {
+    switch (frame->getState()) {
+    case START_RECEIVE:
+        handleBusyToneStartReceive(frame);
+        break;
+
+    case RECEIVING: {
+        handleBusyToneReceiving(frame);
+        break;
+    }
+    case END_RECEIVE:
+        handleBusyToneEndReceive(frame);
+        break;
+
+    default:
+        opp_error("Unknown BusyTone state: %s", frame->getState());
+        break;
+    }
+}
+
 void BasePhyLayer::handleAirFrameStartReceive(AirFrame* frame) {
     coreEV << "Received new AirFrame " << frame << " from channel." << endl;
 
@@ -575,6 +595,71 @@ void BasePhyLayer::handleAirFrameStartReceive(AirFrame* frame) {
 
             //if no decider is defined we will schedule the message directly to its end
         } else {
+            coreEV << "Unknown decider && protocolId" << endl;
+
+            Signal& signal = frame->getSignal();
+
+            simtime_t signalEndTime = signal.getReceptionStart()
+                    + frame->getDuration();
+            frame->setState(END_RECEIVE);
+
+            sendSelfMessage(frame, signalEndTime);
+        }
+    }
+}
+
+void BasePhyLayer::handleBusyToneStartReceive(AirFrame* frame) {
+    coreEV << "Received new BusyTone " << frame << " from channel." << endl;
+
+    channelInfoBusyTone.addAirFrame(frame, simTime());
+    assert(!channelInfoBusyTone.isChannelEmpty());
+
+    if (usePropagationDelay) {
+        Signal& s = frame->getSignal();
+        simtime_t delay = simTime() - s.getSendingStart();
+        s.setPropagationDelay(delay);
+    }
+    assert(frame->getSignal().getReceptionStart() == simTime());
+
+    frame->getSignal().setReceptionSenderInfo(frame);
+
+    //emptyAnalogueModels = -1;
+    //sameVehicle = 1;
+    //NLOSLink = 2;
+    int flag = filterSignal(frame);
+    if (flag) {
+        switch (flag) {
+        case -1:
+            coreEV << "BusyTone " << frame << " analogueModels.empty() = true"
+                          << endl;
+            break;
+        case 1:
+            coreEV << "Ignored Received BusyTone " << frame
+                          << " sent from our own Head OR Tail Transmitter, schedule the message directly to its end"
+                          << endl;
+            break;
+        case 2:
+            coreEV << "Ignored Received BusyTone " << frame
+                          << " sent through NLOS Link, schedule the message directly to its end"
+                          << endl;
+            break;
+        }
+
+        //if no decider is defined we will schedule the message directly to its end
+        Signal& signal = frame->getSignal();
+        frame->setState(END_RECEIVE);
+        sendSelfMessage(frame, signal.getReceptionStart());
+
+    } else {
+        if (decider && isKnownProtocolId(frame->getProtocolId())) {
+            frame->setState(RECEIVING);
+
+            coreEV << "handleBusyToneReceving(frame:BusyTone)" << endl;
+            //pass the BusyTone the first time to the Decider
+            handleBusyToneReceiving(frame);
+
+            //if no decider is defined we will schedule the message directly to its end
+        } else {
             Signal& signal = frame->getSignal();
 
             simtime_t signalEndTime = signal.getReceptionStart()
@@ -619,6 +704,57 @@ void BasePhyLayer::handleAirFrameReceiving(AirFrame* frame) {
                   << nextHandleTime - simTime() << "s." << endl;
 
     sendSelfMessage(frame, nextHandleTime);
+
+}
+
+void BasePhyLayer::handleBusyToneReceiving(AirFrame* frame) {
+    coreEV << "handleBusyToneReceiving" << endl;
+
+    Signal& signal = frame->getSignal();
+    simtime_t nextHandleTime = decider->processBusyToneSignal(frame);
+
+    assert(signal.getDuration() == frame->getDuration());
+    simtime_t signalEndTime = signal.getReceptionStart() + frame->getDuration();
+
+    coreEV << "simTime() = " << simTime() << ", signalEndTime = "
+                  << signalEndTime << ", nextHandleTime = " << nextHandleTime
+                  << endl;
+
+    if (simTime() >= signalEndTime) {
+        // Finished process BusyTone, but still need to wait for TX of Busytone finished processing its Airframe
+        frame->setState(END_RECEIVE);
+
+        if (nextHandleTime < 0) {
+            nextHandleTime = signalEndTime;
+            coreEV
+                          << "nextHandleTime < 0 --> notagain : BusyTone is UnderSensitivity or WasTransmitting (or Asym not yet implemented)"
+                          << endl;
+        } else {
+            frame->setState(END_RECEIVE);
+        }
+
+        sendSelfMessage(frame, nextHandleTime);
+        return;
+    }
+
+    //smaller zero means don't give it to me again
+    if (nextHandleTime < 0) {
+        nextHandleTime = signalEndTime;
+        frame->setState(END_RECEIVE);
+
+        //invalid point in time
+    } else if (nextHandleTime < simTime() || nextHandleTime > signalEndTime) {
+        opp_error(
+                "Invalid next handle time returned by Decider. Expected a value between current simulation time (%.2f) and end of signal (%.2f) but got %.2f",
+                SIMTIME_DBL(simTime()), SIMTIME_DBL(signalEndTime),
+                SIMTIME_DBL(nextHandleTime));
+    }
+
+    coreEV << "Handed BusyTone with ID " << frame->getId()
+                  << " to Decider. Next handling in "
+                  << nextHandleTime - simTime() << "s." << endl;
+
+    sendSelfMessage(frame, nextHandleTime);
 }
 
 void BasePhyLayer::handleAirFrameEndReceive(AirFrame* frame) {
@@ -637,6 +773,13 @@ void BasePhyLayer::handleAirFrameEndReceive(AirFrame* frame) {
     }
 
     radio->cleanAnalogueModelUntil(earliestInfoPoint);
+}
+
+void BasePhyLayer::handleBusyToneEndReceive(AirFrame* frame) {
+    coreEV << "End of BusyTone with ID " << frame->getId() << "." << endl;
+
+    decider->processBusyToneSignal(frame);
+    channelInfoBusyTone.removeAirFrame(frame);
 }
 
 void BasePhyLayer::handleUpperMessage(cMessage* msg) {

@@ -278,6 +278,8 @@ protected:
 	 */
 	virtual void handleAirFrame(AirFrame* frame);
 
+	virtual void handleBusyTone(AirFrame* frame);
+
 	/**
 	 * @brief Handles messages received from the upper layer through the
 	 * data gate.
@@ -312,15 +314,21 @@ protected:
 	 */
 	virtual void handleAirFrameStartReceive(AirFrame* msg);
 
+	virtual void handleBusyToneStartReceive(AirFrame* msg);
+
 	/**
 	 * @brief Handles incoming AirFrames with the state RECEIVING.
 	 */
 	virtual void handleAirFrameReceiving(AirFrame* msg);
 
+    virtual void handleBusyToneReceiving(AirFrame* msg);
+
 	/**
 	 * @brief Handles incoming AirFrames with the state END_RECEIVE.
 	 */
 	virtual void handleAirFrameEndReceive(AirFrame* msg);
+
+	virtual void handleBusyToneEndReceive(AirFrame* msg);
 
 	/*@}*/
 
