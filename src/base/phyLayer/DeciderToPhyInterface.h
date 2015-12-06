@@ -138,6 +138,8 @@ public:
 
 	/** @brief Returns the channel currently used by the radio. */
 	virtual int getCurrentRadioChannel() = 0;
+
+	virtual bool isEnableHelloMessage() = 0;
 };
 
 #endif /*DECIDER_TO_PHY_INTERFACE_H_*/

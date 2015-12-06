@@ -339,6 +339,8 @@ protected:
 	virtual double calculateBusyToneSinr(  simtime_t_cref start,
 	                                                simtime_t_cref end,
 	                                                AirFrame*      exclude = NULL);
+
+    virtual bool isEnableHelloMessage();
 };
 
 #endif /* BASEDECIDER_H_ */

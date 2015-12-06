@@ -502,3 +502,8 @@ double BaseDecider::calculateBusyToneSinr(simtime_t_cref start, simtime_t_cref e
 
     return sinr;
 }
+
+bool BaseDecider::isEnableHelloMessage(){
+    return phy->isEnableHelloMessage();
+}
+

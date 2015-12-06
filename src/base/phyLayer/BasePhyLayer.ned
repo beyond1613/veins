@@ -39,6 +39,7 @@ simple BasePhyLayer like IWirelessPhy
 		int initialRadioChannel = default(0);  // Initial radio channel.
 		
 		bool enableBusyTone ; // Should transmit busytone when processing signal
+		bool enableHelloMessage ; // Let receiver of  BusyTone ignore BusyTone sent from unreachable TX (Asymmetry Link) 
 
     gates:
         input upperLayerIn; 	// from the MAC layer

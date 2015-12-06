@@ -161,7 +161,7 @@ Coord NoMobiltyPos = Coord::ZERO;
 
 BasePhyLayer::BasePhyLayer() :
         protocolId(GENERIC), thermalNoise(0), radio(0), decider(0), radioSwitchingOverTimer(
-                0), txOverTimer(0), headerLength(-1), enableBusyTone(false), world(
+                0), txOverTimer(0), headerLength(-1), enableBusyTone(false), enableHelloMessage(false), world(
         NULL) {
 }
 
@@ -222,6 +222,7 @@ void BasePhyLayer::initialize(int stage) {
         world = FindModule<BaseWorldUtility*>::findGlobalModule();
 
         enableBusyTone = par("enableBusyTone").boolValue();
+        enableHelloMessage = par("enableHelloMessage").boolValue();
         if (world == NULL) {
             opp_error("Could not find BaseWorldUtility module");
         }
@@ -732,7 +733,7 @@ void BasePhyLayer::handleAirFrameReceiving(AirFrame* frame) {
                 + T_SYM_80211P * ceil(payloadLengthBits / (n_dbps)); // 112 us
 
                 // Signal
-        Signal* s = createSignal(simTime(), duration, 20, 1e6, 1e6);
+        Signal* s = createSignal(simTime(), duration, power, bitrate, frequency);
 
         // Airframe : do what encapsMsg() do
         const char *name = "BusyTone";
@@ -764,7 +765,7 @@ void BasePhyLayer::handleAirFrameReceiving(AirFrame* frame) {
 
 Signal* BasePhyLayer::createSignal(simtime_t start, simtime_t length,
         double power, double bitrate, double frequency) {
-    simtime_t end = start + length;
+    //simtime_t end = start + length;
     //create signal with start at current simtime and passed length
     Signal* s = new Signal(start, length);
 
@@ -808,7 +809,7 @@ void BasePhyLayer::handleBusyToneReceiving(AirFrame* frame) {
         if (nextHandleTime < 0) {
             nextHandleTime = signalEndTime;
             coreEV
-                          << "nextHandleTime < 0 --> notagain : BusyTone is UnderSensitivity or WasTransmitting (or Asym not yet implemented)"
+                          << "nextHandleTime < 0 --> notagain : BusyTone is UnderSensitivity or WasTransmitting or Asymmetry)"
                           << endl;
         } else {
             frame->setState(END_RECEIVE);
@@ -1168,7 +1169,7 @@ int BasePhyLayer::filterSignal(AirFrame *frame) {
         return -1;
 
     /*
-     // NOTICE_BUSYTONE : TODO  DISABLE FOR BUSYTONE
+     // NOTICE_BUSYTONE : TODO  DISABLE FOR BUSYTONE, but it doesn't affect Airframe because there is no building in our sumo trace
      for (AnalogueModelList::const_iterator it = analogueModels.begin();
      it != analogueModels.end(); it++) {
      if (((*it)->filterSignal(frame, senderPos, receiverPos)))
@@ -1407,4 +1408,8 @@ void BasePhyLayer::recordScalar(const char *name, double value,
 cObject * const BasePhyLayer::setUpControlInfo(cMessage * const pMsg,
         DeciderResult * const pDeciderResult) {
     return PhyToMacControlInfo::setControlInfo(pMsg, pDeciderResult);
+}
+
+bool BasePhyLayer::isEnableHelloMessage(){
+    return enableHelloMessage;
 }

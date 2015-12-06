@@ -169,6 +169,8 @@ protected:
 
 	bool enableBusyTone;
 
+	bool enableHelloMessage;
+
 public:
 
 
@@ -582,6 +584,8 @@ public:
 	 * @param pSrcAddr	The MAC address of the message receiver.
 	 */
 	 virtual cObject *const setUpControlInfo(cMessage *const pMsg, DeciderResult *const pDeciderResult);
+
+	 bool isEnableHelloMessage();
 };
 
 #endif /*BASEPHYLAYER_*/

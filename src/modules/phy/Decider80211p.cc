@@ -761,15 +761,12 @@ simtime_t Decider80211p::processBusyToneSignalHeader(AirFrame* msg) {
         if (curSyncBusyTone == frame) {
             // check if the snrMapping is above the Decider's specific threshold,
             // i.e. the Decider has received it correctly
-
-
             DBG_D11P
                             << "Apply checkIfBusyToneSignalOkVLC for curSyncBusyTone"
                             << endl;
 
             // NOTICE_BUSYTONE : TODO : when implement helloMessage Scenario, then need to implement checkIfBusyToneSignalOkVLC()
             result = checkIfBusyToneSignalOkVLC(frame);
-            result = new DeciderResult80211(false, 0, 0);
 
             curSyncBusyTone = 0;
         } else {
@@ -782,8 +779,12 @@ simtime_t Decider80211p::processBusyToneSignalHeader(AirFrame* msg) {
     }
 
     if (result->isSignalCorrect()) {
-        DBG_D11P << "packet:BusyTone was received correctly ...(not yet implemented)\n";
+        DBG_D11P << "packet:BusyTone was received correctly ...\n";
         // NOTICE_BUSYTONE : TODO : if signal is correct but asymmetry, then return notAgain;
+        if(isEnableHelloMessage() && frame->getIsAsymmetry()){
+            DBG_D11P << "Asymmetry between TX of Busytone and me, return notAgain" << endl;
+            return notAgain;
+        }
     } else {
         if (frame->getUnderSensitivity()) {
             DBG_D11P
