@@ -15,6 +15,11 @@ simtime_t Decider::processSignal(AirFrame* s) {
 	return -1;
 }
 
+simtime_t Decider::processBusyToneSignal(AirFrame* s) {
+
+    return -1;
+}
+
 ChannelState Decider::getChannelState() {
 
 	return ChannelState();

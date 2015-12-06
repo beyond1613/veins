@@ -140,6 +140,8 @@ public:
 	 */
 	virtual simtime_t processSignal(AirFrame* frame);
 
+	virtual simtime_t processBusyToneSignal(AirFrame* frame);
+
 	/**
 	 * @brief A function that returns information about the channel state
 	 *
@@ -177,6 +179,8 @@ protected:
 	 */
 	virtual simtime_t processNewSignal(AirFrame* frame);
 
+	virtual simtime_t processNewBusyToneSignal(AirFrame* frame);
+
 	/**
 	 * @brief Processes the end of the header of a received Signal.
 	 *
@@ -187,6 +191,10 @@ protected:
 	virtual simtime_t processSignalHeader(AirFrame* frame) {
 		opp_error("BaseDecider does not handle Signal headers!");
 		return notAgain;
+	}
+
+	virtual simtime_t processBusyToneSignalHeader(AirFrame* frame) {
+	    return notAgain;
 	}
 
 	/**
@@ -200,11 +208,15 @@ protected:
 	 */
 	virtual simtime_t processSignalEnd(AirFrame* frame);
 
+	virtual simtime_t processBusyToneSignalEnd(AirFrame* frame);
+
 	/**
 	 * @brief Processes any Signal for which no state could be found.
 	 * (is an error case).
 	 */
 	virtual simtime_t processUnknownSignal(AirFrame* frame);
+
+    virtual simtime_t processUnknownBusyToneSignal(AirFrame* frame);
 
 	/**
 	 * @brief Returns the SignalState for the passed AirFrame.

@@ -117,6 +117,57 @@ simtime_t Decider80211p::processNewSignal(AirFrame* msg) {
     }
 }
 
+simtime_t Decider80211p::processNewBusyToneSignal(AirFrame* msg) {
+
+    AirFrame11p *frame = check_and_cast<AirFrame11p *>(msg);
+
+    // get the receiving power of the Signal
+    Signal& signal = frame->getSignal();
+
+    signalStates[frame] = EXPECT_HEADER;
+
+    double recvPower = signal.getRecvPower();
+    DBG_D11P
+                    << "recvPower(BusyTone) = signal.getRecvPower() = "
+                    << recvPower << endl;
+
+    if (recvPower <= sensitivity) {
+        //annotate the frame, so that we won't try decoding it at its end
+        frame->setUnderSensitivity(true);
+
+        DBG_D11P << "BusyTone: " << frame->getId() << " (" << recvPower
+                        << ") received, while < sensitivity. No need to setChannelIdleStatus(fasle)"
+                        << std::endl;
+        return signal.getReceptionEnd();
+    } else {
+
+        if (phy11p->getRadioState() == Radio::TX) {
+            // TODO : If implementing ccaBusyTone for TX, then we need to setChannelIdelStatus(false) here
+            frame->setWasTransmitting(true);
+            DBG_D11P << "BusyTone: " << frame->getId() << " (" << recvPower
+                            << ") received, while already sending. No need to setChannelIdleStatus(false)"
+                            << std::endl;
+        } else {
+
+            // setChannelIdleStatus(false) no matter 1st or following(Interference) Busytone
+            setChannelIdleStatus(false);
+
+            //NIC no need to sync to any frame:busytone
+            DBG_D11P << "BusyTone: " << frame->getId() << " with (" << recvPower
+                            << " > " << sensitivity
+                            << ") -> Trying to receive BusyTone." << std::endl;
+
+            //channel turned busy
+            //measure communication density
+            myBusyTime += signal.getDuration().dbl();
+        }
+
+        DBG_D11P << "processNewBusyToneSignal : signal.getReceptionEnd = " << signal.getReceptionEnd()
+                        << endl;
+        return signal.getReceptionEnd();
+    }
+}
+
 int Decider80211p::getSignalState(AirFrame* frame) {
 
     if (signalStates.find(frame) == signalStates.end()) {
@@ -323,10 +374,9 @@ DeciderResult* Decider80211p::checkIfSignalOkVLC(AirFrame* frame) {
 
     DeciderResult80211* result = 0;
 
-    DBG_D11P << "(snir, snr, frame->getBitLength(), payloadBitrate) = ("
-                    << snir << ", " << snr << ", "
-                    << frame->getBitLength() << ", " << payloadBitrate << ")"
-                    << endl;
+    DBG_D11P << "checkIfSignalOkVLC : (snir, snr, frame->getBitLength(), payloadBitrate) = (" << snir
+                    << ", " << snr << ", " << frame->getBitLength() << ", "
+                    << payloadBitrate << ")" << endl;
 
     switch (packetOkVLC(snir, snr, frame->getBitLength(), payloadBitrate)) {
 
@@ -475,22 +525,24 @@ enum Decider80211p::PACKET_OK_RESULT Decider80211p::packetOkVLC(double snir,
     double packetOkSinr;
     double headerNoError;
 
-    double snir_linear = pow(10,(snir/10));
-    double snr_linear = pow(10,(snr/10));
+    double snir_linear = pow(10, (snir / 10));
+    double snr_linear = pow(10, (snr / 10));
 
-    ber = 0.5 * erfc( (sqrt(snir_linear)) / ( 2 * (sqrt(2)) ) );
+    ber = 0.5 * erfc((sqrt(snir_linear)) / (2 * (sqrt(2))));
     packetOkSinr = pow(1.0 - ber, lengthMPDU - PHY_HDR_PLCPSIGNAL_LENGTH);
     headerNoError = pow(1.0 - ber, PHY_HDR_PLCPSIGNAL_LENGTH);
-    DBG_D11P << "ber = " << ber << ", packetOkSinr = " << packetOkSinr << ", headerNoError = " << headerNoError << endl;
+    DBG_D11P << "SINR : ber = " << ber << ", packetOkSinr = " << packetOkSinr
+                    << ", headerNoError = " << headerNoError << endl;
 
     double packetOkSnr;
     double headerNoErrorSnr;
     //compute PER also for SNR only
     if (collectCollisionStats) {
-        ber = 0.5 * erfc( (sqrt(snr_linear)) / ( 2 * (sqrt(2)) ) );
+        ber = 0.5 * erfc((sqrt(snr_linear)) / (2 * (sqrt(2))));
         packetOkSnr = pow(1.0 - ber, lengthMPDU - PHY_HDR_PLCPSIGNAL_LENGTH);
         headerNoErrorSnr = pow(1.0 - ber, PHY_HDR_PLCPSIGNAL_LENGTH);
-        DBG_D11P << "ber = " << ber << ", packetOkSnr = " << packetOkSnr << ", headerNoErrorSnr = " << headerNoErrorSnr << endl;
+        DBG_D11P << "SNR : ber = " << ber << ", packetOkSnr = " << packetOkSnr
+                        << ", headerNoErrorSnr = " << headerNoErrorSnr << endl;
     }
 
     //probability of no bit error in the PLCP header
@@ -617,6 +669,71 @@ bool Decider80211p::cca(simtime_t_cref time, AirFrame* exclude) {
     return isChannelIdle;
 }
 
+simtime_t Decider80211p::processBusyToneSignalHeader(AirFrame* msg) {
+    DBG_D11P << "processBusyToneSignalHeader" << endl;
+
+    AirFrame11p *frame = check_and_cast<AirFrame11p *>(msg);
+
+    bool whileSending = false;
+
+    signalStates[frame] = EXPECT_END;
+
+    DeciderResult* result;
+
+    if (frame->getUnderSensitivity()) {
+        //this frame was not even detected by the radio card
+        result = new DeciderResult80211(false, 0, 0);
+    } else if (frame->getWasTransmitting()) {
+        whileSending = true;
+        result = new DeciderResult80211(false, 0, 0);
+    } else {
+        // numCurBusyTone said how many busytone we're processing (processing means busytone state between processBusyToneSignalHeader and processBusyToneSignalEnd
+        numCurBusyTone++;
+        DBG_D11P << "processBusyToneSignalHeader : numCurBusyTone = " << numCurBusyTone << endl;
+
+        if (numCurBusyTone == 1) {
+            // check if the snrMapping is above the Decider's specific threshold,
+            // i.e. the Decider has received it correctly
+
+
+            DBG_D11P
+                            << "There is only one BusyTone. Apply checkIfBusyToneSignalOkVLC for this BusyTone(not yet implemented)"
+                            << endl;
+
+            // NOTICE_BUSYTONE : TODO : when implement helloMessage Scenario, then need to implement checkIfBusyToneSignalOkVLC()
+            //result = checkIfBusyToneSignalOkVLC(frame);
+            result = new DeciderResult80211(false, 0, 0);
+
+        } else {
+            //if there are other BusyTone, no need to check ok or not
+            DBG_D11P
+                            << "There are other BusyTones. No need to checkIfSignalOkVLC(frame:busytone)"
+                            << endl;
+            result = new DeciderResult80211(false, 0, 0);
+        }
+    }
+
+    if (result->isSignalCorrect()) {
+        DBG_D11P << "packet:BusyTone was received correctly ...(not yet implemented)\n";
+        // NOTICE_BUSYTONE : TODO : if signal is correct but asymmetry, then return notAgain;
+    } else {
+        if (frame->getUnderSensitivity()) {
+            DBG_D11P
+                            << "packet:BusyTone was not detected by the card. power was under sensitivity threshold, return notAgain" << endl;
+            return notAgain;
+        } else if (whileSending) {
+            DBG_D11P << "packet:BusyTone was received while sending, return notAgain" << endl;
+            return notAgain;
+        } else {
+            DBG_D11P << "packet:BusyTone was not received correctly\n";
+        }
+        delete result;
+    }
+
+    // return time when RX processBusyToneSignalEnd = When Busytone'TX have finished processSignalEnd()
+    return frame->getBusytone_endtime();
+}
+
 simtime_t Decider80211p::processSignalEnd(AirFrame* msg) {
 
     AirFrame11p *frame = check_and_cast<AirFrame11p *>(msg);
@@ -695,6 +812,43 @@ simtime_t Decider80211p::processSignalEnd(AirFrame* msg) {
      }
      }
      */
+    return notAgain;
+}
+
+simtime_t Decider80211p::processBusyToneSignalEnd(AirFrame* msg) {
+
+    AirFrame11p *frame = check_and_cast<AirFrame11p *>(msg);
+
+    // here the Signal is finally processed
+    //remove this frame from our current signals
+    signalStates.erase(frame);
+
+    if (frame->getWasTransmitting()) {
+        DBG_D11P
+                        << "I'm currently sending when receiving BusyTone. No need to setChannelIdle(true)"
+                        << endl;
+    } else if (frame->getUnderSensitivity()) {
+        DBG_D11P
+                        << "Undersensitivity(BusyTone). No need to setChannelIdle(true)"
+                        << endl;
+    } else {
+        //check if channel is idle now
+        if (numCurBusyTone > 1) {
+            DBG_D11P
+                            << "Channel not yet idle!(BusyTone) because there are other BusyTone, numCurBusyTone = "
+                            << numCurBusyTone << " > 1" << endl;
+        } else {
+            //might have been idle before (when the packet rxpower was below sens)
+            if (isChannelIdle != true) {
+                DBG_D11P << "Channel idle now!(BusyTone)\n";
+                setChannelIdleStatus(true);
+            }
+        }
+
+        // Finished Processing this BusyTone
+        numCurBusyTone--;
+    }
+
     return notAgain;
 }
 

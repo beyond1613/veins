@@ -30,6 +30,23 @@ simtime_t BaseDecider::processSignal(AirFrame* frame) {
     }
 }
 
+simtime_t BaseDecider::processBusyToneSignal(AirFrame* frame) {
+
+    assert(frame);
+    deciderEV << "Processing BusyTone..." << endl;
+
+    switch (getSignalState(frame)) {
+    case NEW:
+        return processNewBusyToneSignal(frame);
+    case EXPECT_HEADER: // = processSignalEnd() ; BusyTone:TX's car license number is saved in header of phy.payload = kind of header :) ;
+        return processBusyToneSignalHeader(frame);
+    case EXPECT_END: // = last part of processSignalEnd() ; setchannelIdle ...
+        return processBusyToneSignalEnd(frame);
+    default:
+        return processUnknownBusyToneSignal(frame);
+    }
+}
+
 simtime_t BaseDecider::processNewSignal(AirFrame* frame) {
     if (currentSignal.first != 0) {
         deciderEV << "Already receiving another AirFrame!" << endl;
@@ -63,6 +80,39 @@ simtime_t BaseDecider::processNewSignal(AirFrame* frame) {
     return signal.getReceptionEnd();
 }
 
+simtime_t BaseDecider::processNewBusyToneSignal(AirFrame* frame) {
+    if (currentSignal.first != 0) {
+        deciderEV << "Already receiving another BusyTone!" << endl;
+        return notAgain;
+    }
+
+    // get the receiving power of the Signal at start-time
+    Signal& signal = frame->getSignal();
+    double recvPower = signal.getReceivingPower()->getValue(
+            Argument(signal.getReceptionStart()));
+
+    // check whether signal is strong enough to receive
+    if (recvPower < sensitivity) {
+        deciderEV << "Signal:BusyTone is to weak (" << recvPower << " < " << sensitivity
+                         << ") -> do not receive." << endl;
+        // Signal too weak, we can't receive it, tell PhyLayer that we don't want it again
+        return notAgain;
+    }
+
+    // Signal is strong enough, receive this Signal and schedule it
+    deciderEV << "Signal:BusyTone is strong enough (" << recvPower << " > "
+                     << sensitivity << ") -> Trying to receive BusyTone."
+                     << endl;
+
+    currentSignal.first = frame;
+    currentSignal.second = EXPECT_END;
+
+    //channel turned busy
+    setChannelIdleStatus(false);
+
+    return signal.getReceptionEnd();
+}
+
 simtime_t BaseDecider::processSignalEnd(AirFrame* frame) {
     deciderEV
                      << "packet was received correctly, it is now handed to upper layer...\n";
@@ -77,8 +127,27 @@ simtime_t BaseDecider::processSignalEnd(AirFrame* frame) {
     return notAgain;
 }
 
+simtime_t BaseDecider::processBusyToneSignalEnd(AirFrame* frame) {
+    deciderEV
+                     << "packet:busytone was received correctly, it is now handed to upper layer...\n";
+    phy->sendUp(frame, new DeciderResult(true));
+
+    // we have processed this AirFrame and we prepare to receive the next one
+    currentSignal.first = 0;
+
+    //channel is idle now
+    setChannelIdleStatus(true);
+
+    return notAgain;
+}
+
 simtime_t BaseDecider::processUnknownSignal(AirFrame* frame) {
     opp_error("Unknown state for the AirFrame with ID %d", frame->getId());
+    return notAgain;
+}
+
+simtime_t BaseDecider::processUnknownBusyToneSignal(AirFrame* frame) {
+    opp_error("Unknown state for the BusyTone with ID %d", frame->getId());
     return notAgain;
 }
 

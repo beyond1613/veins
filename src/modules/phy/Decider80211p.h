@@ -69,6 +69,9 @@ class Decider80211p: public BaseDecider {
 		/** @brief Frame that the NIC card is currently trying to decode */
 		AirFrame *curSyncFrame;
 
+		// number of busytone I've received but not processed
+		int numCurBusyTone;
+
 		std::string myPath;
 		Decider80211pToPhy80211pInterface* phy11p;
 		std::map<AirFrame*,int> signalStates;
@@ -107,6 +110,8 @@ class Decider80211p: public BaseDecider {
 
 		virtual simtime_t processNewSignal(AirFrame* frame);
 
+		virtual simtime_t processNewBusyToneSignal(AirFrame* frame);
+
 		/**
 		 * @brief Processes a received AirFrame.
 		 *
@@ -117,6 +122,10 @@ class Decider80211p: public BaseDecider {
 		 * @return	usually return a value for: 'do not pass it again'
 		 */
 		virtual simtime_t processSignalEnd(AirFrame* frame);
+
+        virtual simtime_t processBusyToneSignalHeader(AirFrame* frame);
+
+		virtual simtime_t processBusyToneSignalEnd(AirFrame* frame);
 
 		/** @brief computes if packet is ok or has errors*/
 		enum PACKET_OK_RESULT packetOk(double snirMin, double snrMin, int lengthMPDU, double bitrate);
@@ -178,6 +187,7 @@ class Decider80211p: public BaseDecider {
 			myBusyTime(0),
 			myStartTime(simTime().dbl()),
 			curSyncFrame(0),
+			numCurBusyTone(0),
 			collectCollisionStats(true),
 			collisions(0) {
 			phy11p = dynamic_cast<Decider80211pToPhy80211pInterface*>(phy);

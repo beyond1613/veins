@@ -94,6 +94,8 @@ public:
 	 */
 	virtual simtime_t processSignal(AirFrame* frame);
 
+	virtual simtime_t processBusyToneSignal(AirFrame* frame);
+
 	/**
 	 * @brief A function that returns information about the channel state
 	 *
