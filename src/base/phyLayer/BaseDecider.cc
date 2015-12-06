@@ -318,6 +318,11 @@ void BaseDecider::getChannelInfo(simtime_t_cref start, simtime_t_cref end,
     phy->getChannelInfo(start, end, out);
 }
 
+void BaseDecider::getChannelInfoBusyTone(simtime_t_cref start, simtime_t_cref end,
+        AirFrameVector& out) {
+    phy->getChannelInfoBusyTone(start, end, out);
+}
+
 Mapping* BaseDecider::calculateRSSIMapping(simtime_t_cref start,
         simtime_t_cref end, AirFrame* exclude) {
     if (exclude)

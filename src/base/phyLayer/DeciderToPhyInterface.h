@@ -58,6 +58,8 @@ public:
 	 */
 	virtual void getChannelInfo(simtime_t_cref from, simtime_t_cref to, AirFrameVector& out) = 0;
 
+	virtual void getChannelInfoBusyTone(simtime_t_cref from, simtime_t_cref to, AirFrameVector& out) = 0;
+
 	/**
 	 * @brief Returns a Mapping which defines the thermal noise in
 	 * the passed time frame (in mW).

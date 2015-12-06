@@ -302,6 +302,9 @@ protected:
 	virtual void getChannelInfo(simtime_t_cref start, simtime_t_cref end,
 								AirFrameVector& out);
 
+	virtual void getChannelInfoBusyTone(simtime_t_cref start, simtime_t_cref end,
+	                                AirFrameVector& out);
+
 	//------Utility methods------------
 
 	/**
