@@ -1,0 +1,9 @@
+﻿<?xml version="1.0"?>
+<!-- debug config -->
+<launch>
+	<copy file="vlc100kmh.net.xml" />
+	<copy file="vlcVehicleNum500.rou.xml" />
+  <copy file="vlc.add.xml" />
+	<copy file="vlc100kmhVehicleNum500.sumo.cfg" type="config" />
+</launch>
+

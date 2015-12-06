@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo-sim.org/xsd/netconvertConfiguration.xsd">
+
+    <input>
+        <node-files value="vlc.nod.xml"/>
+        <edge-files value="vlc.edg.xml"/>
+    </input>
+
+    <output>
+        <output-file value="vlc.net.xml"/>
+       <plain-output-prefix value="plain"/> 
+    </output>
+
+    <processing>
+        <plain.extend-edge-shape value="true"/>
+        <no-internal-links value="true"/>
+        <no-turnarounds value="true"/> 
+    </processing>
+
+    <report>
+      <!-- <xml-validation value="never"/> -->
+     <verbose value="true"/>
+    </report>
+
+</configuration>
+
+<!-- 
+  Networks/Building Networks from own XML-descriptions  
+  http://sumo.dlr.de/wiki/Networks/Building_Networks_from_own_XML-descriptions
+-->
+
+<!--
+  When using the option  plain.extend-edge-shape it is sufficient to supply inner geometry points and extend the shape with the starting and ending node positions automatically
+  -->

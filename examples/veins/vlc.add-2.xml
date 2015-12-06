@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<additional xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo-sim.org/xsd/additional_file.xsd">
+
+    <route id="couterclockwise-bl" edges="1 2 3 4"/>
+    <route id="clockwise-tl" edges="6 7 8 9"/>   
+    <route id="couterclockwise-tr" edges="3 4 1 2"/>
+    <route id="clockwise-br" edges="8 9 6 7"/>     
+    
+    <route id="couterclockwise-br" edges="2 3 4 1"/>
+    <route id="clockwise-tr" edges="7 8 9 6"/>   
+    <route id="couterclockwise-tl" edges="4 1 2 3"/>
+    <route id="clockwise-bl" edges="9 6 7 8"/>     
+    
+     <rerouter id="rerouter-couterclockwise-bl" edges="3">
+        <interval begin="0" end="100000">
+            <routeProbReroute id="couterclockwise-tr" />
+        </interval>
+    </rerouter>
+    <rerouter id="rerouter-couterclockwise-tr" edges="1">
+        <interval begin="0" end="100000">
+            <routeProbReroute id="couterclockwise-bl" />
+        </interval>
+    </rerouter>
+
+ <rerouter id="rerouter-clockwise-tl" edges="8">
+        <interval begin="0" end="100000">
+            <routeProbReroute id="clockwise-br" />
+        </interval>
+    </rerouter>
+    <rerouter id="rerouter-clockwise-br" edges="6">
+        <interval begin="0" end="100000">
+            <routeProbReroute id="clockwise-tl" />
+        </interval>
+    </rerouter>
+
+</additional>
+
+<!-- 
+  Definition of Vehicles, Vehicle Types, and Routes
+  http://sumo.dlr.de/wiki/Definition_of_Vehicles,_Vehicle_Types,_and_Routes#Repeated_vehicles_.28Flows.29
+-->

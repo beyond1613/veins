@@ -1,0 +1,56 @@
+﻿<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo-sim.org/xsd/routes_file.xsd">
+   
+   <vType id="vtype0" accel="2.6" decel="4.5" sigma="0.5" length="4.6" width="1.8" minGap="1" speedFactor="1" speedDev="0.1" maxSpeed="45"  color="1,1,0"/>
+   <!--
+    <flow id="flowcbl" type="vtype0" route="couterclockwise-bl" begin="0" probability="0.5"  number="50" departPos="random" departLane="random" departSpeed="random"/>
+    <flow id="flowctr" type="vtype0" route="couterclockwise-tr" begin="0" probability="0.5"  number="50" departPos="random" departLane="random" departSpeed="random"/>
+   <flow id="flowtl" type="vtype0" route="clockwise-tl" begin="0" probability="0.5" number="50" departPos="random" departLane="random" departSpeed="random"/>
+   <flow id="flowbr" type="vtype0" route="clockwise-br" begin="0" probability="0.5" number="50" departPos="random" departLane="random" departSpeed="random"/>
+-->   
+    <flow id="flowcbl" type="vtype0" route="couterclockwise-bl" begin="0" period="0.01"  number="100" departPos="random" departLane="random" departSpeed="random"/>
+    <flow id="flowctr" type="vtype0" route="couterclockwise-tr" begin="0" period="0.01"  number="100" departPos="random" departLane="random" departSpeed="random"/>
+   <flow id="flowtl" type="vtype0" route="clockwise-tl" begin="0" period="0.01" number="100" departPos="random" departLane="random" departSpeed="random"/>
+   <flow id="flowbr" type="vtype0" route="clockwise-br" begin="0" period="0.01" number="100" departPos="random" departLane="random" departSpeed="random"/>
+
+</routes>
+
+<!-- 
+  Definition of Vehicles, Vehicle Types, and Routes
+  http://sumo.dlr.de/wiki/Definition_of_Vehicles,_Vehicle_Types,_and_Routes#Repeated_vehicles_.28Flows.29
+
+  Demand/Shortest or Optimal Path Routing
+  http://sumo.dlr.de/wiki/Demand/Shortest_or_Optimal_Path_Routing 
+  -->
+  
+  <!--
+  Repeated vehicles (Flows)
+    begin	float(s)	first vehicle departure time
+    end	float(s)	end of departure interval
+    vehsPerHour	float(#/h)	number of vehicles per hour, equally spaced (not together with period or probability)
+    period	float(s)	insert equally spaced vehicles at that period (not together with vehsPerHour or probability)
+    probability	float([0,1])	probability for emitting a vehicle each second (not together with vehsPerHour or period)
+    number	int(#)	total number of vehicles, equally spaced
+
+  departLane
+    Determines on which lane the vehicle is tried to be inserted;
+      ≥0: the index of the lane, starting with rightmost=0
+      "random": a random lane is chosen; please note that a vehicle insertion is not retried if it could not be inserted
+      "free": the most free (least occupied) lane is chosen
+      "allowed": the "free" lane (see above) of those lane of the depart edge which allow vehicles of the class the vehicle belongs to
+      "best": the "free" lane of those who allow the vehicle the longest ride without the need to lane change
+      "first": the rightmost lane the vehicle may use
+
+  departPos
+    Determines the position on the chosen departure lane at which the vehicle is tried to be inserted;
+      ≥0: the position on the lane, starting at the lane's begin; must be smaller than the starting lane's length
+      "random": a random position is chosen; it is not retried to insert the vehicle if the first try fails
+      "free": a free position (if existing) is used
+      "random_free": at first, the "random" position is tried, then the "free", if the first one failed
+      "base": the vehicle is tried to be inserted at the position which lets its back be at the beginning of the lane (vehicle's front position=vehicle length)
+
+  departSpeed
+  Determines the speed of the vehicle at insertion;
+    ≥0: The vehicle is tried to be inserted using the given speed
+    "random": A random speed between 0 and MIN(vehicle's maximum velocity, lane's maximum velocity) is used
+    "max": The maximum velocity allowed for the vehicle on the chosen departure lane is used
+-->
