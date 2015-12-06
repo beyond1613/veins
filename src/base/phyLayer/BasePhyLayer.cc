@@ -1112,6 +1112,14 @@ BasePhyLayer::~BasePhyLayer() {
         cancelAndDelete(*it);
     }
 
+    AirFrameVector channelBustTone;
+    channelInfoBusyTone.getAirFrames(0, simTime(), channelBustTone);
+
+    for (AirFrameVector::iterator it = channelBustTone.begin();
+            it != channelBustTone.end(); ++it) {
+        cancelAndDelete(*it);
+    }
+
     //free timer messages
     if (txOverTimer) {
         cancelAndDelete(txOverTimer);
