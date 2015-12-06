@@ -36,6 +36,9 @@ public:
 		/** @brief Stores the id on which classes extending BasePhy should
 		 * continue their own kinds.*/
 		LAST_BASE_PHY_KIND,
+
+		// For VLC
+		BUSY_TONE,
 	};
 
 public:

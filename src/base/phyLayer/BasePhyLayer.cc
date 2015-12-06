@@ -484,6 +484,10 @@ void BasePhyLayer::handleMessage(cMessage* msg) {
     } else if (msg->getKind() == AIR_FRAME) {
         handleAirFrame(static_cast<AirFrame*>(msg));
 
+        // BusyTone
+    } else if (msg->getKind() == BUSY_TONE) {
+        handleBusyTone(static_cast<AirFrame*>(msg));
+
         //unknown message
     } else {
         ev << "Unknown message received." << endl;
@@ -915,6 +919,11 @@ void BasePhyLayer::handleSelfMessage(cMessage* msg) {
         //AirFrame
     case AIR_FRAME:
         handleAirFrame(static_cast<AirFrame*>(msg));
+        break;
+
+        //BusyTone
+    case BUSY_TONE:
+        handleBusyTone(static_cast<AirFrame*>(msg));
         break;
 
         //ChannelSenseRequest

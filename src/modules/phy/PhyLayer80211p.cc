@@ -437,6 +437,11 @@ void PhyLayer80211p::handleSelfMessage(cMessage* msg) {
         BasePhyLayer::handleAirFrame(static_cast<AirFrame*>(msg));
         break;
 
+        //BusyTone
+    case BUSY_TONE:
+            BasePhyLayer::handleBusyTone(static_cast<AirFrame*>(msg));
+            break;
+
         //ChannelSenseRequest
     case CHANNEL_SENSE_REQUEST:
         BasePhyLayer::handleChannelSenseRequest(msg);
