@@ -50,4 +50,6 @@ packet AirFrame
 	int protocolId;		//the id of the phy protocol of this airframe
 	
 	int channel;    	//the channel of the radio used for this transmission
+	
+	bool isAsymmetry; // is link asymmetry link between sender and receiver 
 }
