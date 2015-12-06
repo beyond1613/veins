@@ -72,6 +72,14 @@ void BaseConnectionManager::initialize(int stage) {
         maxInterferenceDistance = 100;
         maxDistSquared = maxInterferenceDistance * maxInterferenceDistance;
 
+        double maxHeadTXDistance = par("maxHeadTXDistance").doubleValue();
+        double maxTailTXDistance = par("maxTailTXDistance").doubleValue();
+        double maxHeadTXAngle = par("maxHeadTXAngle").doubleValue(); //degree
+        double maxTailTXAngle = par("maxTailTXAngle").doubleValue(); //degree
+
+        maxHeadTXAngle = M_PI*(maxHeadTXAngle/180); // rad
+        maxTailTXAngle = M_PI*(maxTailTXAngle/180); // rad
+
         //----initialize node grid-----
         //step 1 - calculate dimension of grid
         //one cell should have at least the size of maxInterferenceDistance
@@ -297,8 +305,6 @@ bool BaseConnectionManager::isInRange(CoordSet& gridUnionObstacle,
 
     int headlight = 1;
     int taillight = -1;
-    int maxHeadTXRange = 100;
-    int maxTailTXRange = 30;
 
     ChannelAccess* senderModule = senderNic->chAccess;
     ChannelAccess* receiverModule = receiverNic->chAccess;
@@ -339,9 +345,9 @@ bool BaseConnectionManager::isInRange(CoordSet& gridUnionObstacle,
     if (senderHeading == headlight) {
         ccEV << "senderNic #" << senderNic->nicId << " using Headlight" << endl;
         // Is it out of transmission distance?
-        if (distancefromSendertoReceiver <= maxHeadTXRange) {
+        if (distancefromSendertoReceiver <= maxHeadTXDistance) {
             // Is it out of transmission angle?
-            if ((vectorfromTXtoRX * vectorTXheading) > cos(M_PI_4)) {
+            if ((vectorfromTXtoRX * vectorTXheading) > cos(maxHeadTXAngle)) {
                 // Is it out of possible bearing?
                 if ((vectorfromTXtoRX * vectorRXheading) < 0) {
                     // Is it blocked by vehicle(s)?
@@ -460,8 +466,8 @@ bool BaseConnectionManager::isInRange(CoordSet& gridUnionObstacle,
     // Sender is Taillight
     else if (senderHeading == taillight) {
         ccEV << "senderNic #" << senderNic->nicId << " using Taillight" << endl;
-        if (distancefromSendertoReceiver <= maxTailTXRange) {
-            if ((vectorfromTXtoRX * vectorTXheading) > cos(M_PI / 3)) {
+        if (distancefromSendertoReceiver <= maxTailTXDistance) {
+            if ((vectorfromTXtoRX * vectorTXheading) > cos(maxTailTXAngle)) {
                 if ((vectorfromTXtoRX * vectorRXheading) < 0) {
                     if (!isBlocked(gridUnionObstacle, senderNic, receiverNic))
                         return true;

@@ -53,6 +53,12 @@ simple ConnectionManager
         double carrierFrequency @unit(Hz);
         // should the maximum interference distance be displayed for each node?
         bool drawMaxIntfDist = default(false);
+      
+       // Communication Distance and Angle for VLC  
+        double maxHeadTXDistance;
+        double maxTailTXDistance;      
+        double maxHeadTXAngle;      
+     	double maxTailTXAngle;
         
         @display("i=abstract/multicast");
 }

@@ -247,6 +247,12 @@ protected:
      * TkEnv.*/
     bool drawMIR;
 
+    // Communication Distance and Angle for VLC
+    double maxHeadTXDistance;
+    double maxTailTXDistance;
+    double maxHeadTXAngle;
+    double maxTailTXAngle;
+
     /** @brief Type for 1-dimensional array of NicEntries.*/
     typedef std::vector<NicEntries> RowVector;
     /** @brief Type for 2-dimensional array of NicEntries.*/
@@ -354,7 +360,7 @@ protected:
             const Coord* newPos);
 
     virtual void updateConnectionsLite(int nicID, const Coord* oldPos,
-                const Coord* newPos);
+            const Coord* newPos);
     /**
      * @brief Check if the two nic's are in range.
      *
