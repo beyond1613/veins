@@ -456,3 +456,49 @@ double BaseDecider::calculateSinr(simtime_t_cref start, simtime_t_cref end,
     return sinr;
 }
 
+double BaseDecider::calculateBusyToneSinr(simtime_t_cref start, simtime_t_cref end,
+        AirFrame* exclude) {
+    double sinr = exclude->getSignal().getRecvPower() - sensitivity;
+
+    if (exclude)
+        deciderEV << "CalculateSinr excluding BusyTone with id "
+                         << exclude->getId() << endl;
+    else
+        deciderEV << "CalculateSinr." << endl;
+
+    AirFrameVector airFrames;
+
+    // collect all BusyTone that intersect with [start, end]
+    getChannelInfoBusyTone(start, end, airFrames);
+
+    // iterate over all AirFrames (except exclude)
+    for (AirFrameVector::const_iterator it = airFrames.begin();
+            it != airFrames.end(); ++it) {
+        // the vector should not contain pointers to 0
+        assert(*it != 0);
+
+        // if iterator points to exclude (that includes the default-case 'exclude == 0')
+        // then skip this AirFrame
+        if (*it == exclude) {
+            continue;
+        }
+
+        // otherwise get the Signal and its recvPower
+        Signal& signal = (*it)->getSignal();
+
+        deciderEV << " sinr(before updated) = " << sinr << endl;
+        sinr = std::min(sinr,
+                (exclude->getSignal().getRecvPower() - signal.getRecvPower()));
+        deciderEV << "updated sinr = " << sinr << ", frame.getRecvPower() = "
+                         << exclude->getSignal().getRecvPower()
+                         << ", Interference frame.getRecvPower()"
+                         << signal.getRecvPower() << endl;
+
+        deciderEV << "Considering Interference by BusyTone with ID "
+                         << (*it)->getId() << ". Starts at "
+                         << signal.getReceptionStart() << " and ends at "
+                         << signal.getReceptionEnd() << endl;
+    }
+
+    return sinr;
+}

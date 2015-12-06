@@ -69,6 +69,8 @@ class Decider80211p: public BaseDecider {
 		/** @brief Frame that the NIC card is currently trying to decode */
 		AirFrame *curSyncFrame;
 
+		AirFrame * curSyncBusyTone;
+
 		// number of busytone I've received but not processed
 		int numCurBusyTone;
 
@@ -107,6 +109,8 @@ class Decider80211p: public BaseDecider {
 		virtual DeciderResult* checkIfSignalOk(AirFrame* frame);
 
 		virtual DeciderResult* checkIfSignalOkVLC(AirFrame* frame);
+
+		virtual DeciderResult* checkIfBusyToneSignalOkVLC(AirFrame* frame);
 
 		virtual simtime_t processNewSignal(AirFrame* frame);
 
@@ -187,6 +191,7 @@ class Decider80211p: public BaseDecider {
 			myBusyTime(0),
 			myStartTime(simTime().dbl()),
 			curSyncFrame(0),
+			curSyncBusyTone(0),
 			numCurBusyTone(0),
 			collectCollisionStats(true),
 			collisions(0) {

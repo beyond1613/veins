@@ -335,6 +335,10 @@ protected:
 	virtual double calculateSinr(  simtime_t_cref start,
 	                                            simtime_t_cref end,
 	                                            AirFrame*      exclude = NULL);
+
+	virtual double calculateBusyToneSinr(  simtime_t_cref start,
+	                                                simtime_t_cref end,
+	                                                AirFrame*      exclude = NULL);
 };
 
 #endif /* BASEDECIDER_H_ */

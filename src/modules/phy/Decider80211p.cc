@@ -152,6 +152,13 @@ simtime_t Decider80211p::processNewBusyToneSignal(AirFrame* msg) {
             // setChannelIdleStatus(false) no matter 1st or following(Interference) Busytone
             setChannelIdleStatus(false);
 
+            if(!curSyncBusyTone)
+                curSyncBusyTone = frame;
+
+            numCurBusyTone++;
+            DBG_D11P << "processNewBusyToneSignal : numCurBusyTone = " << numCurBusyTone << endl;
+
+
             //NIC no need to sync to any frame:busytone
             DBG_D11P << "BusyTone: " << frame->getId() << " with (" << recvPower
                             << " > " << sensitivity
@@ -405,6 +412,66 @@ DeciderResult* Decider80211p::checkIfSignalOkVLC(AirFrame* frame) {
     default:
         ASSERT2(false,
                 "Impossible packet result returned by packetOk(). Check the code.");
+        break;
+
+    }
+
+    return result;
+}
+
+DeciderResult* Decider80211p::checkIfBusyToneSignalOkVLC(AirFrame* frame) {
+    Signal& s = frame->getSignal();
+    simtime_t start = s.getReceptionStart();
+    simtime_t end = s.getReceptionEnd();
+
+    double snir = calculateBusyToneSinr(start, end, frame);
+    double snr;
+    if (collectCollisionStats) {
+        snr = calculateSnr(frame);
+    } else {
+        //just set to any value. if collectCollisionStats != true
+        //it will be ignored by packetOk
+        snr = -1;
+    }
+
+    ConstMappingIterator* bitrateIt = s.getBitrate()->createConstIterator();
+    bitrateIt->next(); //iterate to payload bitrate indicator
+    double payloadBitrate = bitrateIt->getValue();
+    delete bitrateIt;
+
+    DeciderResult80211* result = 0;
+
+    DBG_D11P << "checkIfBusyToneSignalOkVLC : (snir, snr, frame->getBitLength(), payloadBitrate) = (" << snir
+                    << ", " << snr << ", " << frame->getBitLength() << ", "
+                    << payloadBitrate << ")" << endl;
+
+    switch (packetOkVLC(snir, snr, (frame->getBitLength()+64), payloadBitrate)) {
+
+    case DECODED:
+        DBG_D11P << "Packet:BusyTone is fine! We can decode it" << std::endl;
+        result = new DeciderResult80211(true, payloadBitrate, snir);
+        break;
+
+    case NOT_DECODED:
+        if (!collectCollisionStats) {
+            DBG_D11P << "Packet:BusyTone has bit Errors. Lost " << std::endl;
+        } else {
+            DBG_D11P << "Packet:BusyTone has bit Errors due to low power. Lost "
+                            << std::endl;
+        }
+        result = new DeciderResult80211(false, payloadBitrate, snir);
+        break;
+
+    case COLLISION:
+        DBG_D11P << "Packet:BusyTone has bit Errors due to collision. Lost "
+                        << std::endl;
+        collisions++;
+        result = new DeciderResult80211(false, payloadBitrate, snir);
+        break;
+
+    default:
+        ASSERT2(false,
+                "Impossible packet:BusyTone result returned by packetOk(). Check the code.");
         break;
 
     }
@@ -688,22 +755,23 @@ simtime_t Decider80211p::processBusyToneSignalHeader(AirFrame* msg) {
         result = new DeciderResult80211(false, 0, 0);
     } else {
         // numCurBusyTone said how many busytone we're processing (processing means busytone state between processBusyToneSignalHeader and processBusyToneSignalEnd
-        numCurBusyTone++;
+        //numCurBusyTone++;
         DBG_D11P << "processBusyToneSignalHeader : numCurBusyTone = " << numCurBusyTone << endl;
 
-        if (numCurBusyTone == 1) {
+        if (curSyncBusyTone == frame) {
             // check if the snrMapping is above the Decider's specific threshold,
             // i.e. the Decider has received it correctly
 
 
             DBG_D11P
-                            << "There is only one BusyTone. Apply checkIfBusyToneSignalOkVLC for this BusyTone(not yet implemented)"
+                            << "Apply checkIfBusyToneSignalOkVLC for curSyncBusyTone"
                             << endl;
 
             // NOTICE_BUSYTONE : TODO : when implement helloMessage Scenario, then need to implement checkIfBusyToneSignalOkVLC()
-            //result = checkIfBusyToneSignalOkVLC(frame);
+            result = checkIfBusyToneSignalOkVLC(frame);
             result = new DeciderResult80211(false, 0, 0);
 
+            curSyncBusyTone = 0;
         } else {
             //if there are other BusyTone, no need to check ok or not
             DBG_D11P
