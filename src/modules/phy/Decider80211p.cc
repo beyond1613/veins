@@ -465,7 +465,6 @@ DeciderResult* Decider80211p::checkIfBusyToneSignalOkVLC(AirFrame* frame) {
     case COLLISION:
         DBG_D11P << "Packet:BusyTone has bit Errors due to collision. Lost "
                         << std::endl;
-        collisions++;
         result = new DeciderResult80211(false, payloadBitrate, snir);
         break;
 
