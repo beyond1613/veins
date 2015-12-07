@@ -375,6 +375,10 @@ protected:
             NicEntries::mapped_type senderNic,
             NicEntries::mapped_type receiverNic);
 
+    virtual bool isRecvPowerUnderSensitivity(
+            BaseConnectionManager::NicEntries::mapped_type senderNic,
+            BaseConnectionManager::NicEntries::mapped_type receiverNic);
+
     virtual bool isBlocked(CoordSet& gridUnionObstacle,
             NicEntries::mapped_type senderNic,
             NicEntries::mapped_type receiverNic);

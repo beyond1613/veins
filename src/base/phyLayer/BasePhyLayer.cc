@@ -1122,6 +1122,7 @@ int BasePhyLayer::filterSignal(AirFrame *frame) {
                   << ", " << relativeYaxis << ")" << endl;
 
     // recvPowertmp
+    // HeadModel[100][101] and TailModel[30][41], filter out those location out of model
     double tmpRecvPower;
     if (senderHeading == 1 && abs(relativeXaxis) > 50) {
         tmpRecvPower = -114;
@@ -1152,8 +1153,10 @@ int BasePhyLayer::filterSignal(AirFrame *frame) {
 
     // set the recvPower of the Signal
     Signal& signal = frame->getSignal();
-    if (recvPower < -114)
+    if (recvPower < -114){
         signal.setRecvPower(-114);
+        coreEV << "## ERROR, Not possible recvPower < -114, I've already filter it out at ConnectionManager()" << endl;
+    }
     else
         signal.setRecvPower(recvPower);
 
