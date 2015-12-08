@@ -81,7 +81,7 @@ void ChannelAccess::sendToChannel(cPacket *msg) {
     NicEntry::GateList::const_iterator i = gateList.begin();
 
     AirFrame* airframe = static_cast<AirFrame*>(msg);
-
+    bool asymmetry;
     if (useSendDirect) {
         // use Andras stuff
         if (i != gateList.end()) {
@@ -91,13 +91,15 @@ void ChannelAccess::sendToChannel(cPacket *msg) {
                 // nic->rx = i->first : nic_tx -> nic_rx must exist
                 // and isAsymmetry(nic_txID, nic_rxID) tell us nic->rx -> nic_tx exist or not
                 // if not, isAsymmetry will return true
-                bool asymmetry = cc->isAsymmetry(getParentModule()->getId(), i->first->nicId);
+                asymmetry = cc->isAsymmetry(getParentModule()->getId(),
+                        i->first->nicId);
 
-                if(asymmetry){
-                    coreEV << "nic_rx doesn't connect to nic_tx --> Asymmetry happen." << endl;
+                if (asymmetry) {
+                    coreEV
+                                  << "nic_rx doesn't connect to nic_tx --> Asymmetry happen."
+                                  << endl;
                     airframe->setIsAsymmetry(true);
-                }
-                else {
+                } else {
                     coreEV << "nic_tx <-> nic_rx --> Symmetry" << endl;
                     airframe->setIsAsymmetry(false);
                 }
@@ -111,6 +113,20 @@ void ChannelAccess::sendToChannel(cPacket *msg) {
                     sendDirect(static_cast<cPacket*>(msg->dup()), delay,
                             msg->getDuration(), i->second->getOwnerModule(), g);
             }
+
+            asymmetry = cc->isAsymmetry(getParentModule()->getId(),
+                    i->first->nicId);
+
+            if (asymmetry) {
+                coreEV
+                              << "nic_rx doesn't connect to nic_tx --> Asymmetry happen."
+                              << endl;
+                airframe->setIsAsymmetry(true);
+            } else {
+                coreEV << "nic_tx <-> nic_rx --> Symmetry" << endl;
+                airframe->setIsAsymmetry(false);
+            }
+
             //calculate delay (Propagation) to this receiving nic
             delay = calculatePropagationDelay(i->first);
 
