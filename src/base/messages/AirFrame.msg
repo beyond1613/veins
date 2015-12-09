@@ -52,4 +52,8 @@ packet AirFrame
 	int channel;    	//the channel of the radio used for this transmission
 	
 	bool isAsymmetry; // is link asymmetry link between sender and receiver 
+	
+	bool senderUsingHeadModule; // for statistic
+	
+	bool receiverUsingHeadModule; // for statistic
 }

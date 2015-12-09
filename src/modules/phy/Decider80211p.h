@@ -49,175 +49,190 @@ using Veins::AirFrame;
  * @see Decider80211p
  */
 class Decider80211p: public BaseDecider {
-	public:
-		enum Decider80211ControlKinds {
-			NOTHING = 22100,
-			BITERROR,       //the phy has recognized a bit error in the packet
-			LAST_DECIDER_80211_CONTROL_KIND,
-			RECWHILESEND
-		};
-	protected:
-		// threshold value for checking a SNR-map (SNR-threshold)
-		double snrThreshold;
+public:
+    enum Decider80211ControlKinds {
+        NOTHING = 22100, BITERROR, //the phy has recognized a bit error in the packet
+        LAST_DECIDER_80211_CONTROL_KIND,
+        RECWHILESEND
+    };
+protected:
+    // threshold value for checking a SNR-map (SNR-threshold)
+    double snrThreshold;
 
-		/** @brief The center frequency on which the decider listens for signals */
-		double centerFrequency;
+    /** @brief The center frequency on which the decider listens for signals */
+    double centerFrequency;
 
-		double myBusyTime;
-		double myStartTime;
+    double myBusyTime;
+    double myStartTime;
 
-		/** @brief Frame that the NIC card is currently trying to decode */
-		AirFrame *curSyncFrame;
+    /** @brief Frame that the NIC card is currently trying to decode */
+    AirFrame *curSyncFrame;
 
-		AirFrame * curSyncBusyTone;
+    AirFrame * curSyncBusyTone;
 
-		// number of busytone I've received but not processed
-		int numCurBusyTone;
+    // number of busytone I've received but not processed
+    int numCurBusyTone;
 
-		std::string myPath;
-		Decider80211pToPhy80211pInterface* phy11p;
-		std::map<AirFrame*,int> signalStates;
+    std::string myPath;
+    Decider80211pToPhy80211pInterface* phy11p;
+    std::map<AirFrame*, int> signalStates;
 
-		/** @brief enable/disable statistics collection for collisions
-		 *
-		 * For collecting statistics about collisions, we compute the Packet
-		 * Error Rate for both SNR and SINR values. This might increase the
-		 * simulation time, so if statistics about collisions are not needed,
-		 * this variable should be set to false
-		 */
-		bool collectCollisionStats;
-		/** @brief count the number of collisions */
-		unsigned int collisions;
+    /** @brief enable/disable statistics collection for collisions
+     *
+     * For collecting statistics about collisions, we compute the Packet
+     * Error Rate for both SNR and SINR values. This might increase the
+     * simulation time, so if statistics about collisions are not needed,
+     * this variable should be set to false
+     */
+    bool collectCollisionStats;
+    /** @brief count the number of collisions */
+    unsigned int collisions;
 
-		/**
-		 * @brief tell the outcome of a packetOk() call, which might be
-		 * correctly decoded, discarded due to low SNR or discarder due
-		 * to low SINR (i.e. collision)
-		 */
-		enum PACKET_OK_RESULT {DECODED, NOT_DECODED, COLLISION};
+    unsigned int statsHHcollisions;
+    unsigned int statsHTcollisions;
+    unsigned int statsTHcollisions;
+    unsigned int statsTTcollisions;
 
-	protected:
+    // H:Head ; T:Tail
+    long statsHHReceivedPackets;
+    long statsHTReceivedPackets;
+    long statsTHReceivedPackets;
+    long statsTTReceivedPackets;
 
-		/**
-		 * @brief Checks a mapping against a specific threshold (element-wise).
-		 *
-		 * @return	true	, if every entry of the mapping is above threshold
-		 * 			false	, otherwise
-		 *
-		 *
-		 */
-		virtual DeciderResult* checkIfSignalOk(AirFrame* frame);
+    long statsHHSNIRLostPackets;
+    long statsHTSNIRLostPackets;
+    long statsTHSNIRLostPackets;
+    long statsTTSNIRLostPackets;
 
-		virtual DeciderResult* checkIfSignalOkVLC(AirFrame* frame);
+    /**
+     * @brief tell the outcome of a packetOk() call, which might be
+     * correctly decoded, discarded due to low SNR or discarder due
+     * to low SINR (i.e. collision)
+     */
+    enum PACKET_OK_RESULT {
+        DECODED, NOT_DECODED, COLLISION
+    };
 
-		virtual DeciderResult* checkIfBusyToneSignalOkVLC(AirFrame* frame);
+protected:
 
-		virtual simtime_t processNewSignal(AirFrame* frame);
+    /**
+     * @brief Checks a mapping against a specific threshold (element-wise).
+     *
+     * @return	true	, if every entry of the mapping is above threshold
+     * 			false	, otherwise
+     *
+     *
+     */
+    virtual DeciderResult* checkIfSignalOk(AirFrame* frame);
 
-		virtual simtime_t processNewBusyToneSignal(AirFrame* frame);
+    virtual DeciderResult* checkIfSignalOkVLC(AirFrame* frame);
 
-		/**
-		 * @brief Processes a received AirFrame.
-		 *
-		 * The SNR-mapping for the Signal is created and checked against the Deciders
-		 * SNR-threshold. Depending on that the received AirFrame is either sent up
-		 * to the MAC-Layer or dropped.
-		 *
-		 * @return	usually return a value for: 'do not pass it again'
-		 */
-		virtual simtime_t processSignalEnd(AirFrame* frame);
+    virtual DeciderResult* checkIfBusyToneSignalOkVLC(AirFrame* frame);
 
-        virtual simtime_t processBusyToneSignalHeader(AirFrame* frame);
+    virtual simtime_t processNewSignal(AirFrame* frame);
 
-		virtual simtime_t processBusyToneSignalEnd(AirFrame* frame);
+    virtual simtime_t processNewBusyToneSignal(AirFrame* frame);
 
-		/** @brief computes if packet is ok or has errors*/
-		enum PACKET_OK_RESULT packetOk(double snirMin, double snrMin, int lengthMPDU, double bitrate);
+    /**
+     * @brief Processes a received AirFrame.
+     *
+     * The SNR-mapping for the Signal is created and checked against the Deciders
+     * SNR-threshold. Depending on that the received AirFrame is either sent up
+     * to the MAC-Layer or dropped.
+     *
+     * @return	usually return a value for: 'do not pass it again'
+     */
+    virtual simtime_t processSignalEnd(AirFrame* frame);
 
-		enum PACKET_OK_RESULT packetOkVLC(double snir, double snr, int lengthMPDU, double bitrate);
+    virtual simtime_t processBusyToneSignalHeader(AirFrame* frame);
 
-		/**
-		 * @brief Calculates the RSSI value for the passed ChannelSenseRequest.
-		 *
-		 * This method is called by BaseDecider when it answers a ChannelSenseRequest
-		 * and can be overridden by sub classing Deciders.
-		 *
-		 * Returns the maximum RSSI value inside the ChannelSenseRequest time
-		 * interval and the channel the Decider currently listens to.
-		 */
-		virtual double calcChannelSenseRSSI(simtime_t_cref min, simtime_t_cref max);
+    virtual simtime_t processBusyToneSignalEnd(AirFrame* frame);
 
-		/**
-		 * @brief Calculates a SNR-Mapping for a Signal.
-		 *
-		 * This method works as the calculateSnrMapping of the BaseDecider class,
-		 * but it return the mapping for both SNR and SINR. This method is used
-		 * to determine the frame reception probability for both SNR and SINR
-		 * values. In this way we can determine (still probabilistically) if
-		 * a frame has been dropped due to low signal power or due to a collision
-		 *
-		 */
-		virtual void calculateSinrAndSnrMapping(AirFrame* frame, Mapping **sinrMap, Mapping **snrMap);
+    /** @brief computes if packet is ok or has errors*/
+    enum PACKET_OK_RESULT packetOk(double snirMin, double snrMin,
+            int lengthMPDU, double bitrate);
 
-		/**
-		 * @brief Calculates a RSSI-Mapping (or Noise-Strength-Mapping) for a
-		 * Signal.
-		 *
-		 * This method is taken from the BaseDecider and changed in order to
-		 * compute the RSSI mapping taking into account only thermal noise
-		 *
-		 * This method can be used to calculate a RSSI-Mapping in case the parameter
-		 * exclude is omitted OR to calculate a Noise-Strength-Mapping in case the
-		 * AirFrame of the received Signal is passed as parameter exclude.
-		 */
-		Mapping* calculateNoiseRSSIMapping(simtime_t_cref start, simtime_t_cref end, AirFrame *frame);
+    enum PACKET_OK_RESULT packetOkVLC(double snir, double snr, int lengthMPDU,
+            double bitrate);
 
-		double calculateSnr(AirFrame *frame);
+    /**
+     * @brief Calculates the RSSI value for the passed ChannelSenseRequest.
+     *
+     * This method is called by BaseDecider when it answers a ChannelSenseRequest
+     * and can be overridden by sub classing Deciders.
+     *
+     * Returns the maximum RSSI value inside the ChannelSenseRequest time
+     * interval and the channel the Decider currently listens to.
+     */
+    virtual double calcChannelSenseRSSI(simtime_t_cref min, simtime_t_cref max);
 
-	public:
+    /**
+     * @brief Calculates a SNR-Mapping for a Signal.
+     *
+     * This method works as the calculateSnrMapping of the BaseDecider class,
+     * but it return the mapping for both SNR and SINR. This method is used
+     * to determine the frame reception probability for both SNR and SINR
+     * values. In this way we can determine (still probabilistically) if
+     * a frame has been dropped due to low signal power or due to a collision
+     *
+     */
+    virtual void calculateSinrAndSnrMapping(AirFrame* frame, Mapping **sinrMap,
+            Mapping **snrMap);
 
-		/**
-		 * @brief Initializes the Decider with a pointer to its PhyLayer and
-		 * specific values for threshold and sensitivity
-		 */
-		Decider80211p(DeciderToPhyInterface* phy,
-		              double sensitivity,
-		              double centerFrequency,
-		              int myIndex = -1,
-		              bool collectCollisionStatistics = false,
-		              bool debug = false):
-			BaseDecider(phy, sensitivity, myIndex, debug),
-			centerFrequency(centerFrequency),
-			myBusyTime(0),
-			myStartTime(simTime().dbl()),
-			curSyncFrame(0),
-			curSyncBusyTone(0),
-			numCurBusyTone(0),
-			collectCollisionStats(true),
-			collisions(0) {
-			phy11p = dynamic_cast<Decider80211pToPhy80211pInterface*>(phy);
-			assert(phy11p);
+    /**
+     * @brief Calculates a RSSI-Mapping (or Noise-Strength-Mapping) for a
+     * Signal.
+     *
+     * This method is taken from the BaseDecider and changed in order to
+     * compute the RSSI mapping taking into account only thermal noise
+     *
+     * This method can be used to calculate a RSSI-Mapping in case the parameter
+     * exclude is omitted OR to calculate a Noise-Strength-Mapping in case the
+     * AirFrame of the received Signal is passed as parameter exclude.
+     */
+    Mapping* calculateNoiseRSSIMapping(simtime_t_cref start, simtime_t_cref end,
+            AirFrame *frame);
 
-		}
+    double calculateSnr(AirFrame *frame);
 
-		void setPath(std::string myPath) {
-			this->myPath = myPath;
-		}
+public:
 
-		bool cca(simtime_t_cref, AirFrame*);
-		int getSignalState(AirFrame* frame);
-		virtual ~Decider80211p();
+    /**
+     * @brief Initializes the Decider with a pointer to its PhyLayer and
+     * specific values for threshold and sensitivity
+     */
+    Decider80211p(DeciderToPhyInterface* phy, double sensitivity,
+            double centerFrequency, int myIndex = -1,
+            bool collectCollisionStatistics = false, bool debug = false) :
+            BaseDecider(phy, sensitivity, myIndex, debug), centerFrequency(
+                    centerFrequency), myBusyTime(0), myStartTime(
+                    simTime().dbl()), curSyncFrame(0), curSyncBusyTone(0), numCurBusyTone(
+                    0), collectCollisionStats(true), collisions(0), statsHHcollisions(0), statsHTcollisions(0), statsTHcollisions(0), statsTTcollisions(0), statsHHReceivedPackets(
+                    0), statsHTReceivedPackets(0), statsTHReceivedPackets(
+                    0), statsTTReceivedPackets(0),statsHHSNIRLostPackets(0), statsHTSNIRLostPackets(0), statsTHSNIRLostPackets(0), statsTTSNIRLostPackets(0) {
+        phy11p = dynamic_cast<Decider80211pToPhy80211pInterface*>(phy);
+        assert(phy11p);
 
-		void changeFrequency(double freq);
+    }
 
-		void setChannelIdleStatus(bool isIdle);
+    void setPath(std::string myPath) {
+        this->myPath = myPath;
+    }
 
-		/**
-		 * @brief invoke this method when the phy layer is also finalized,
-		 * so that statistics recorded by the decider can be written to
-		 * the output file
-		 */
-		virtual void finish();
+    bool cca(simtime_t_cref, AirFrame*);
+    int getSignalState(AirFrame* frame);
+    virtual ~Decider80211p();
+
+    void changeFrequency(double freq);
+
+    void setChannelIdleStatus(bool isIdle);
+
+    /**
+     * @brief invoke this method when the phy layer is also finalized,
+     * so that statistics recorded by the decider can be written to
+     * the output file
+     */
+    virtual void finish();
 
 };
 

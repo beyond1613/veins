@@ -1073,6 +1073,17 @@ int BasePhyLayer::filterSignal(AirFrame *frame) {
     int receiverHeading =
             receiverModule->getMobilityModule()->getCurrentHeading();
 
+    // statistic
+    if(senderHeading == 1)
+        frame->setSenderUsingHeadModule(true);
+    else
+        frame->setSenderUsingHeadModule(false);
+
+    if(receiverHeading == 1)
+        frame->setReceiverUsingHeadModule(true);
+    else
+        frame->setReceiverUsingHeadModule(false);
+
     // Normalized Vector
     Coord vectorfromTXtoRX = (receiverPos - senderPos)
             / distancefromSendertoReceiver;

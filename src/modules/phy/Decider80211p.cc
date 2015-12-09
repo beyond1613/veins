@@ -127,9 +127,8 @@ simtime_t Decider80211p::processNewBusyToneSignal(AirFrame* msg) {
     signalStates[frame] = EXPECT_HEADER;
 
     double recvPower = signal.getRecvPower();
-    DBG_D11P
-                    << "recvPower(BusyTone) = signal.getRecvPower() = "
-                    << recvPower << endl;
+    DBG_D11P << "recvPower(BusyTone) = signal.getRecvPower() = " << recvPower
+                    << endl;
 
     if (recvPower <= sensitivity) {
         //annotate the frame, so that we won't try decoding it at its end
@@ -152,12 +151,12 @@ simtime_t Decider80211p::processNewBusyToneSignal(AirFrame* msg) {
             // setChannelIdleStatus(false) no matter 1st or following(Interference) Busytone
             setChannelIdleStatus(false);
 
-            if(!curSyncBusyTone)
+            if (!curSyncBusyTone)
                 curSyncBusyTone = frame;
 
             numCurBusyTone++;
-            DBG_D11P << "processNewBusyToneSignal : numCurBusyTone = " << numCurBusyTone << endl;
-
+            DBG_D11P << "processNewBusyToneSignal : numCurBusyTone = "
+                            << numCurBusyTone << endl;
 
             //NIC no need to sync to any frame:busytone
             DBG_D11P << "BusyTone: " << frame->getId() << " with (" << recvPower
@@ -169,8 +168,8 @@ simtime_t Decider80211p::processNewBusyToneSignal(AirFrame* msg) {
             myBusyTime += signal.getDuration().dbl();
         }
 
-        DBG_D11P << "processNewBusyToneSignal : signal.getReceptionEnd = " << signal.getReceptionEnd()
-                        << endl;
+        DBG_D11P << "processNewBusyToneSignal : signal.getReceptionEnd = "
+                        << signal.getReceptionEnd() << endl;
         return signal.getReceptionEnd();
     }
 }
@@ -381,14 +380,16 @@ DeciderResult* Decider80211p::checkIfSignalOkVLC(AirFrame* frame) {
 
     DeciderResult80211* result = 0;
 
-    DBG_D11P << "checkIfSignalOkVLC : (snir, snr, frame->getBitLength(), payloadBitrate) = (" << snir
-                    << ", " << snr << ", " << frame->getBitLength() << ", "
-                    << payloadBitrate << ")" << endl;
+    DBG_D11P
+                    << "checkIfSignalOkVLC : (snir, snr, frame->getBitLength(), payloadBitrate) = ("
+                    << snir << ", " << snr << ", " << frame->getBitLength()
+                    << ", " << payloadBitrate << ")" << endl;
 
     switch (packetOkVLC(snir, snr, frame->getBitLength(), payloadBitrate)) {
 
     case DECODED:
         DBG_D11P << "Packet is fine! We can decode it" << std::endl;
+
         result = new DeciderResult80211(true, payloadBitrate, snir);
         break;
 
@@ -399,6 +400,7 @@ DeciderResult* Decider80211p::checkIfSignalOkVLC(AirFrame* frame) {
             DBG_D11P << "Packet has bit Errors due to low power. Lost "
                             << std::endl;
         }
+
         result = new DeciderResult80211(false, payloadBitrate, snir);
         break;
 
@@ -406,6 +408,20 @@ DeciderResult* Decider80211p::checkIfSignalOkVLC(AirFrame* frame) {
         DBG_D11P << "Packet has bit Errors due to collision. Lost "
                         << std::endl;
         collisions++;
+
+        if (frame->getSenderUsingHeadModule()
+                && frame->getReceiverUsingHeadModule()) {
+            statsHHcollisions++;
+        } else if (frame->getSenderUsingHeadModule()
+                && !frame->getReceiverUsingHeadModule()) {
+            statsHTcollisions++;
+        } else if (!frame->getSenderUsingHeadModule()
+                && frame->getReceiverUsingHeadModule()) {
+            statsTHcollisions++;
+        } else {
+            statsTTcollisions++;
+        }
+
         result = new DeciderResult80211(false, payloadBitrate, snir);
         break;
 
@@ -441,11 +457,12 @@ DeciderResult* Decider80211p::checkIfBusyToneSignalOkVLC(AirFrame* frame) {
 
     DeciderResult80211* result = 0;
 
-    DBG_D11P << "checkIfBusyToneSignalOkVLC : (snir, snr, frame->getBitLength(), payloadBitrate) = (" << snir
-                    << ", " << snr << ", " << frame->getBitLength() << ", "
-                    << payloadBitrate << ")" << endl;
+    DBG_D11P
+                    << "checkIfBusyToneSignalOkVLC : (snir, snr, frame->getBitLength(), payloadBitrate) = ("
+                    << snir << ", " << snr << ", " << frame->getBitLength()
+                    << ", " << payloadBitrate << ")" << endl;
 
-    switch (packetOkVLC(snir, snr, (frame->getBitLength()+64), payloadBitrate)) {
+    switch (packetOkVLC(snir, snr, (frame->getBitLength() + 64), payloadBitrate)) {
 
     case DECODED:
         DBG_D11P << "Packet:BusyTone is fine! We can decode it" << std::endl;
@@ -755,42 +772,47 @@ simtime_t Decider80211p::processBusyToneSignalHeader(AirFrame* msg) {
     } else {
         // numCurBusyTone said how many busytone we're processing (processing means busytone state between processBusyToneSignalHeader and processBusyToneSignalEnd
         //numCurBusyTone++;
-        DBG_D11P << "processBusyToneSignalHeader : numCurBusyTone = " << numCurBusyTone << endl;
+        DBG_D11P << "processBusyToneSignalHeader : numCurBusyTone = "
+                        << numCurBusyTone << endl;
 
         if (curSyncBusyTone == frame) {
             // check if the snrMapping is above the Decider's specific threshold,
             // i.e. the Decider has received it correctly
-            DBG_D11P
-                            << "Apply checkIfBusyToneSignalOkVLC for curSyncBusyTone"
+            DBG_D11P << "Apply checkIfBusyToneSignalOkVLC for curSyncBusyTone"
                             << endl;
 
-            // NOTICE_BUSYTONE : TODO : when implement helloMessage Scenario, then need to implement checkIfBusyToneSignalOkVLC()
             result = checkIfBusyToneSignalOkVLC(frame);
 
             curSyncBusyTone = 0;
         } else {
             //if there are other BusyTone, no need to check ok or not
             DBG_D11P
-                            << "There are other BusyTones. No need to checkIfSignalOkVLC(frame:busytone)"
-                            << endl;
-            result = new DeciderResult80211(false, 0, 0);
+            //<< "There are other BusyTones. No need to checkIfBusyToneSignalOkVLC(frame:busytone)"
+                    << "There are other BusyTones. Still to checkIfBusyToneSignalOkVLC(frame:busytone)"
+                    << endl;
+            result = checkIfBusyToneSignalOkVLC(frame);
+            //result = new DeciderResult80211(false, 0, 0);
         }
     }
 
     if (result->isSignalCorrect()) {
         DBG_D11P << "packet:BusyTone was received correctly ...\n";
-        // NOTICE_BUSYTONE : TODO : if signal is correct but asymmetry, then return notAgain;
-        if(isEnableHelloMessage() && frame->getIsAsymmetry()){
-            DBG_D11P << "Asymmetry between TX of Busytone and me, return notAgain" << endl;
+        if (isEnableHelloMessage() && frame->getIsAsymmetry()) {
+            DBG_D11P
+                            << "Asymmetry between TX of Busytone and me, return notAgain"
+                            << endl;
             return notAgain;
         }
     } else {
         if (frame->getUnderSensitivity()) {
             DBG_D11P
-                            << "packet:BusyTone was not detected by the card. power was under sensitivity threshold, return notAgain" << endl;
+                            << "packet:BusyTone was not detected by the card. power was under sensitivity threshold, return notAgain"
+                            << endl;
             return notAgain;
         } else if (whileSending) {
-            DBG_D11P << "packet:BusyTone was received while sending, return notAgain" << endl;
+            DBG_D11P
+                            << "packet:BusyTone was received while sending, return notAgain"
+                            << endl;
             return notAgain;
         } else {
             DBG_D11P << "packet:BusyTone was not received correctly\n";
@@ -846,6 +868,20 @@ simtime_t Decider80211p::processSignalEnd(AirFrame* msg) {
     if (result->isSignalCorrect()) {
         DBG_D11P
                         << "packet was received correctly, it is now handed to upper layer...\n";
+
+        // Statistic who sent the packet and who receive the packet
+        if (frame->getSenderUsingHeadModule()
+                && frame->getReceiverUsingHeadModule())
+            statsHHReceivedPackets++;
+        else if (frame->getSenderUsingHeadModule()
+                && !frame->getReceiverUsingHeadModule())
+            statsHTReceivedPackets++;
+        else if (!frame->getSenderUsingHeadModule()
+                && frame->getReceiverUsingHeadModule())
+            statsTHReceivedPackets++;
+        else
+            statsTTReceivedPackets++;
+
         // go on with processing this AirFrame, send it to the Mac-Layer
         phy->sendUp(frame, result);
     } else {
@@ -859,6 +895,19 @@ simtime_t Decider80211p::processSignalEnd(AirFrame* msg) {
         } else {
             DBG_D11P
                             << "packet was not received correctly, sending it as control message to upper layer\n";
+
+            if (frame->getSenderUsingHeadModule()
+                    && frame->getReceiverUsingHeadModule())
+                statsHHSNIRLostPackets++;
+            else if (frame->getSenderUsingHeadModule()
+                    && !frame->getReceiverUsingHeadModule())
+                statsHTSNIRLostPackets++;
+            else if (!frame->getSenderUsingHeadModule()
+                    && frame->getReceiverUsingHeadModule())
+                statsTHSNIRLostPackets++;
+            else
+                statsTTSNIRLostPackets++;
+
             phy->sendControlMsgToMac(new cMessage("Error", BITERROR));
         }
         delete result;
@@ -943,6 +992,21 @@ void Decider80211p::finish() {
     if (collectCollisionStats) {
         phy->recordScalar("ncollisions", collisions);
     }
+
+    phy->recordScalar("collisions_HeadtoHead", statsHHcollisions);
+    phy->recordScalar("collisions_HeadtoTail", statsHTcollisions);
+    phy->recordScalar("collisions_TailtoHead", statsTHcollisions);
+    phy->recordScalar("collisions_TailtoTail", statsTTcollisions);
+
+    phy->recordScalar("receivedPackets_HeadtoHead", statsHHReceivedPackets);
+    phy->recordScalar("receivedPackets_HeadtoTail", statsHTReceivedPackets);
+    phy->recordScalar("receivedPackets_TailtoHead", statsTHReceivedPackets);
+    phy->recordScalar("receivedPackets_TailtoTail", statsTTReceivedPackets);
+
+    phy->recordScalar("SNIRLostPackets_HeadtoHead", statsHHSNIRLostPackets);
+    phy->recordScalar("SNIRLostPackets_HeadtoTail", statsHTSNIRLostPackets);
+    phy->recordScalar("SNIRLostPackets_TailtoHead", statsTHSNIRLostPackets);
+    phy->recordScalar("SNIRLostPackets_TailtoTail", statsTTSNIRLostPackets);
 }
 
 Decider80211p::~Decider80211p() {
