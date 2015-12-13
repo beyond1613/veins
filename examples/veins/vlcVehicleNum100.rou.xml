@@ -7,17 +7,16 @@
    <flow id="flowtl" type="vtype0" route="clockwise-tl" begin="0" probability="0.5" number="50" departPos="random" departLane="random" departSpeed="random"/>
    <flow id="flowbr" type="vtype0" route="clockwise-br" begin="0" probability="0.5" number="50" departPos="random" departLane="random" departSpeed="random"/>
 -->   
-    <flow id="flowcbl" type="vtype0" route="couterclockwise-bl" begin="0" period="0.01"  number="50" departPos="random" departLane="random" departSpeed="random"/>
-    <flow id="flowctr" type="vtype0" route="couterclockwise-tr" begin="0" period="0.01"  number="50" departPos="random" departLane="random" departSpeed="random"/>
-   <flow id="flowtl" type="vtype0" route="clockwise-tl" begin="0" period="0.01" number="50" departPos="random" departLane="random" departSpeed="random"/>
-   <flow id="flowbr" type="vtype0" route="clockwise-br" begin="0" period="0.01" number="50" departPos="random" departLane="random" departSpeed="random"/>
+    <flow id="flowcbl" type="vtype0" route="couterclockwise-bl" begin="0" period="0.01"  number="40" departPos="random" departLane="random" departSpeed="random"/>
+    <flow id="flowctr" type="vtype0" route="couterclockwise-tr" begin="0" period="0.01"  number="40" departPos="random" departLane="random" departSpeed="random"/>
+   <flow id="flowtl" type="vtype0" route="clockwise-tl" begin="0" period="0.01" number="40" departPos="random" departLane="random" departSpeed="random"/>
+   <flow id="flowbr" type="vtype0" route="clockwise-br" begin="0" period="0.01" number="40" departPos="random" departLane="random" departSpeed="random"/>
 
-<!-- Add vehicle from whole road instead of only two straight 
     <flow id="flowcbr" type="vtype0" route="couterclockwise-br" begin="0" period="0.04"  number="10" departPos="random" departLane="random" departSpeed="random"/>
     <flow id="flowctl" type="vtype0" route="couterclockwise-tl" begin="0" period="0.04"  number="10" departPos="random" departLane="random" departSpeed="random"/>
    <flow id="flowtr" type="vtype0" route="clockwise-tr" begin="0" period="0.04" number="10" departPos="random" departLane="random" departSpeed="random"/>
    <flow id="flowbl" type="vtype0" route="clockwise-bl" begin="0" period="0.04" number="10" departPos="random" departLane="random" departSpeed="random"/>
--->
+
 </routes>
 
 <!-- 

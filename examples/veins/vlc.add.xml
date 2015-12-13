@@ -6,6 +6,11 @@
     <route id="couterclockwise-tr" edges="3 4 1 2"/>
     <route id="clockwise-br" edges="8 9 6 7"/>     
     
+    <route id="couterclockwise-br" edges="2 3 4 1"/>
+    <route id="clockwise-tr" edges="7 8 9 6"/>   
+    <route id="couterclockwise-tl" edges="4 1 2 3"/>
+    <route id="clockwise-bl" edges="9 6 7 8"/>     
+    
      <rerouter id="rerouter-couterclockwise-bl" edges="3">
         <interval begin="0" end="100000">
             <routeProbReroute id="couterclockwise-tr" />
